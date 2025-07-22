@@ -24,23 +24,6 @@ ANTHROPIC_API_KEY=your_anthropic_key
 GOOGLE_API_KEY=your_google_key
 GEMINI_API_KEY=your_gemini_key
 KIMI_API_KEY=your_kimi_key
-
-# Monitoring & Logging
-LOGGING_ENDPOINT=your_logging_endpoint
-LOGGING_API_KEY=your_logging_key
-MONITORING_ENDPOINT=your_monitoring_endpoint
-MONITORING_API_KEY=your_monitoring_key
-ALERTING_ENDPOINT=your_alerting_endpoint
-ALERTING_API_KEY=your_alerting_key
-
-# Performance
-CACHE_TTL=3600
-RATE_LIMIT_WINDOW=900000
-RATE_LIMIT_MAX=100
-
-# Security
-SENTRY_DSN=your_sentry_dsn
-ANALYTICS_ID=your_analytics_id
 ```
 
 #### 2. Error Logging and Monitoring

@@ -69,16 +69,7 @@ const nextConfig = {
   },
 }
 
-// Sentry configuration
-const sentryWebpackPluginOptions = {
-  silent: true,
-  dryRun: process.env.NODE_ENV !== 'production',
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
-  authToken: process.env.SENTRY_AUTH_TOKEN,
-  widenClientFileUpload: true,
-  hideSourceMaps: true
-}
+// Sentry configuration removed
 
 module.exports = process.env.SENTRY_DSN 
   ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)

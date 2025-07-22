@@ -59,22 +59,8 @@ class Logger {
   }
 
   private async sendToLoggingService(logEntry: LogEntry) {
-    try {
-      // Send to external logging service (e.g., Sentry, LogRocket, etc.)
-      if (process.env.LOGGING_ENDPOINT) {
-        await fetch(process.env.LOGGING_ENDPOINT, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.LOGGING_API_KEY}`
-          },
-          body: JSON.stringify(logEntry)
-        })
-      }
-    } catch (error) {
-      // Fallback to console if logging service fails
-      console.error('Failed to send log to external service:', error)
-    }
+    // Logging to external service is disabled (no LOGGING_ENDPOINT configured)
+    return
   }
 
   error(message: string, context?: Record<string, any>, error?: Error) {

@@ -31,23 +31,8 @@ class MonitoringSystem {
   }
 
   private initializeSentry() {
-    if (this.isProduction && process.env.SENTRY_DSN) {
-      Sentry.init({
-        dsn: process.env.SENTRY_DSN,
-        environment: process.env.NODE_ENV,
-        tracesSampleRate: 0.1,
-        beforeSend(event) {
-          // Filter out sensitive information
-          if (event.request?.headers) {
-            delete event.request.headers.authorization
-            delete event.request.headers.cookie
-          }
-          return event
-        }
-      })
-      
-      logger.info('Sentry monitoring initialized')
-    }
+    // Sentry integration removed
+    return
   }
 
   private initializeAlerts() {
@@ -172,20 +157,8 @@ class MonitoringSystem {
   }
 
   private async sendToMonitoringService(metric: Metric) {
-    try {
-      if (process.env.MONITORING_ENDPOINT) {
-        await fetch(process.env.MONITORING_ENDPOINT, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.MONITORING_API_KEY}`
-          },
-          body: JSON.stringify(metric)
-        })
-      }
-    } catch (error) {
-      logger.error('Failed to send metric to monitoring service', { error })
-    }
+    // Monitoring to external service is disabled (no MONITORING_ENDPOINT configured)
+    return
   }
 
   private checkAlerts() {
@@ -259,27 +232,8 @@ class MonitoringSystem {
   }
 
   private async sendAlertToExternalService(alert: Alert) {
-    try {
-      if (process.env.ALERTING_ENDPOINT) {
-        await fetch(process.env.ALERTING_ENDPOINT, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.ALERTING_API_KEY}`
-          },
-          body: JSON.stringify({
-            alertId: alert.id,
-            name: alert.name,
-            severity: alert.severity,
-            threshold: alert.threshold,
-            timestamp: Date.now(),
-            environment: process.env.NODE_ENV
-          })
-        })
-      }
-    } catch (error) {
-      logger.error('Failed to send alert to external service', { error })
-    }
+    // Alerting to external service is disabled (no ALERTING_ENDPOINT configured)
+    return
   }
 
   // Performance monitoring helpers
@@ -300,19 +254,8 @@ class MonitoringSystem {
       error_message: error.message,
       ...context
     })
-
     logger.error('Application error', { error, context })
-
-    // Send to Sentry in production
-    if (this.isProduction) {
-      Sentry.captureException(error, {
-        tags: {
-          component: context.component || 'unknown',
-          user_id: context.userId || 'unknown'
-        },
-        extra: context
-      })
-    }
+    // Sentry reporting removed
   }
 
   recordRequest(method: string, path: string, statusCode: number, duration: number) {
