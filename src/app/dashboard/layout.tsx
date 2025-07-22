@@ -1,19 +1,8 @@
 'use client'
 
-import { AuthProvider } from '@/components/AuthProvider'
 import { useAuth } from '@/components/AuthProvider'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-
-function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <AuthProvider>
-      <DashboardAuthWrapper>
-        {children}
-      </DashboardAuthWrapper>
-    </AuthProvider>
-  )
-}
 
 function DashboardAuthWrapper({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -40,4 +29,10 @@ function DashboardAuthWrapper({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
-export default DashboardLayout 
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <DashboardAuthWrapper>
+      {children}
+    </DashboardAuthWrapper>
+  )
+} 

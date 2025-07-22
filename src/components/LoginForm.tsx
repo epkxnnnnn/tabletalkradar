@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useAuth } from './AuthProvider'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -10,8 +10,15 @@ export default function LoginForm() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const { signIn } = useAuth()
+  const { signIn, user } = useAuth()
   const router = useRouter()
+
+  // Redirect to dashboard if already logged in
+  React.useEffect(() => {
+    if (user) {
+      router.push('/dashboard')
+    }
+  }, [user, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -22,11 +29,11 @@ export default function LoginForm() {
     
     if (error) {
       setError(error.message)
+      setLoading(false)
     } else {
-      router.push('/dashboard')
+      // Don't set loading to false here - let the useEffect handle redirect
+      // The auth state change will trigger the redirect
     }
-    
-    setLoading(false)
   }
 
   return (
