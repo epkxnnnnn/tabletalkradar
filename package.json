@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.0",
+    "@formatjs/icu-messageformat-parser": "^2.11.2",
     "@google/generative-ai": "^0.15.0",
     "@hookform/resolvers": "^3.3.0",
     "@radix-ui/react-alert-dialog": "^1.0.0",
@@ -51,7 +52,6 @@
     "clsx": "^2.0.0",
     "date-fns": "^3.0.0",
     "domexception": "^4.0.0",
-    "intl-messageformat-parser": "^6.4.4",
     "lodash": "^4.17.0",
     "lucide-react": "^0.400.0",
     "next": "15.4.2",
