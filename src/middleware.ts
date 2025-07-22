@@ -7,12 +7,15 @@ export async function middleware(request: NextRequest) {
     // Create response
     const response = NextResponse.next()
     
-    // Auth protection for protected routes
-    const protectedPaths = ['/dashboard', '/admin', '/api/clients', '/api/audits', '/api/reports']
-    const isProtectedPath = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path))
+    // Temporarily disable middleware auth checks - let page-level protection handle it
+    // This avoids cookie/session issues in middleware that can cause redirect loops
     
-    if (isProtectedPath) {
-      // Only check auth for protected paths and only if we have the required env vars
+    // Auth protection for API routes only (not dashboard pages)
+    const protectedApiPaths = ['/api/clients', '/api/audits', '/api/reports', '/api/admin']
+    const isProtectedApiPath = protectedApiPaths.some(path => request.nextUrl.pathname.startsWith(path))
+    
+    if (isProtectedApiPath) {
+      // Only check auth for protected API routes
       if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
         const supabase = createServerClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -33,15 +36,22 @@ export async function middleware(request: NextRequest) {
           const { data: { session } } = await supabase.auth.getSession()
           
           if (!session) {
-            const redirectUrl = new URL('/auth/login', request.url)
-            redirectUrl.searchParams.set('redirectTo', request.nextUrl.pathname)
-            return NextResponse.redirect(redirectUrl)
+            return new NextResponse(
+              JSON.stringify({ error: 'Unauthorized' }),
+              { 
+                status: 401,
+                headers: { 'Content-Type': 'application/json' }
+              }
+            )
           }
         } catch (authError) {
-          // If auth check fails, redirect to login
-          const redirectUrl = new URL('/auth/login', request.url)
-          redirectUrl.searchParams.set('redirectTo', request.nextUrl.pathname)
-          return NextResponse.redirect(redirectUrl)
+          return new NextResponse(
+            JSON.stringify({ error: 'Unauthorized' }),
+            { 
+              status: 401,
+              headers: { 'Content-Type': 'application/json' }
+            }
+          )
         }
       }
     }
