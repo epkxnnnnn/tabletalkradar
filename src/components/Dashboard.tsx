@@ -11,6 +11,7 @@ import Settings from './Settings'
 import Integrations from './Integrations'
 import TeamManagement from './TeamManagement'
 import { ToastContainer, useToast } from './Toast'
+import Image from 'next/image'
 
 interface Profile {
   id: string
@@ -85,7 +86,7 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-bold text-white">BusinessScope AI</h1>
+              <Image src="/logo.png" alt="TableTalk Radar" width={150} height={40} className="h-10 w-auto" />
               {isSuperAdmin && (
                 <span className="ml-2 px-2 py-1 bg-red-600 text-white text-xs rounded-full">
                   SUPER ADMIN

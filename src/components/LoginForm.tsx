@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useAuth } from './AuthProvider'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 export default function LoginForm() {
   const [email, setEmail] = useState('')
@@ -32,8 +33,11 @@ export default function LoginForm() {
     <div className="min-h-screen flex items-center justify-center bg-slate-900">
       <div className="max-w-md w-full space-y-8 p-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
-            Sign in to BusinessScope AI
+          <div className="flex justify-center mb-6">
+            <Image src="/logo.png" alt="TableTalk Radar" width={200} height={50} className="h-12 w-auto" />
+          </div>
+          <h2 className="text-center text-3xl font-extrabold text-white">
+            Sign in to your account
           </h2>
           <p className="mt-2 text-center text-sm text-slate-400">
             Access your business intelligence dashboard

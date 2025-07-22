@@ -1,7 +1,17 @@
 import { Resend } from 'resend'
 import { logger } from './logger'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+let resendInstance: Resend | null = null
+
+function getResend() {
+  if (!resendInstance) {
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error('RESEND_API_KEY environment variable is required')
+    }
+    resendInstance = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resendInstance
+}
 
 export interface EmailTemplate {
   to: string
@@ -39,7 +49,7 @@ export class NotificationService {
           <body style="font-family: Arial, sans-serif; background-color: #0f172a; color: #ffffff; margin: 0; padding: 0;">
             <div style="max-width: 600px; margin: 0 auto; background-color: #1e293b; border-radius: 8px; overflow: hidden;">
               <div style="background: linear-gradient(135deg, #dc2626, #7c2d12); padding: 30px; text-align: center;">
-                <h1 style="margin: 0; font-size: 28px; font-weight: bold;">BusinessScope AI</h1>
+                <h1 style="margin: 0; font-size: 28px; font-weight: bold;">TableTalk Radar</h1>
                 <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Business Intelligence Report</p>
               </div>
               
@@ -73,8 +83,8 @@ export class NotificationService {
         </html>
       `
       
-      await resend.emails.send({
-        from: 'BusinessScope AI <noreply@businessscope.ai>',
+      await getResend().emails.send({
+        from: 'TableTalk Radar <noreply@tabletalkradar.com>',
         to: email,
         subject: `Audit Complete: ${businessName} (Score: ${score})`,
         html
@@ -111,7 +121,7 @@ export class NotificationService {
           <body style="font-family: Arial, sans-serif; background-color: #0f172a; color: #ffffff; margin: 0; padding: 0;">
             <div style="max-width: 600px; margin: 0 auto; background-color: #1e293b; border-radius: 8px; overflow: hidden;">
               <div style="background: linear-gradient(135deg, #dc2626, #7c2d12); padding: 30px; text-align: center;">
-                <h1 style="margin: 0; font-size: 28px; font-weight: bold;">BusinessScope AI</h1>
+                <h1 style="margin: 0; font-size: 28px; font-weight: bold;">TableTalk Radar</h1>
                 <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Weekly Performance Report</p>
               </div>
               
@@ -154,8 +164,8 @@ export class NotificationService {
         </html>
       `
       
-      await resend.emails.send({
-        from: 'BusinessScope AI <reports@businessscope.ai>',
+      await getResend().emails.send({
+        from: 'TableTalk Radar <reports@tabletalkradar.com>',
         to: email,
         subject: 'Weekly Performance Report - BusinessScope AI',
         html
@@ -219,8 +229,8 @@ export class NotificationService {
         </html>
       `
       
-      await resend.emails.send({
-        from: 'BusinessScope AI <alerts@businessscope.ai>',
+      await getResend().emails.send({
+        from: 'TableTalk Radar <alerts@tabletalkradar.com>',
         to: email,
         subject: `🚨 ${severity.toUpperCase()} ALERT: ${businessName} - ${alertType}`,
         html

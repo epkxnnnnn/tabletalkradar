@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useAuth } from './AuthProvider'
 import { useRouter } from 'next/navigation'
 import { businessCategories } from '@/lib/business-types'
+import Image from 'next/image'
 
 export default function SignupForm() {
   const [formData, setFormData] = useState({
@@ -68,11 +69,14 @@ export default function SignupForm() {
     <div className="min-h-screen flex items-center justify-center bg-slate-900">
       <div className="max-w-md w-full space-y-8 p-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+          <div className="flex justify-center mb-6">
+            <Image src="/logo.png" alt="TableTalk Radar" width={200} height={50} className="h-12 w-auto" />
+          </div>
+          <h2 className="text-center text-3xl font-extrabold text-white">
             Create your account
           </h2>
           <p className="mt-2 text-center text-sm text-slate-400">
-            Join BusinessScope AI for universal business intelligence
+            Join TableTalk Radar for AI-powered business intelligence
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

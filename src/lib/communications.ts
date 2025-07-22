@@ -1,25 +1,56 @@
 import { Resend } from 'resend'
 import twilio from 'twilio'
 
-// Resend Email Client
-export const resend = new Resend(process.env.RESEND_API_KEY!)
+// Lazy-initialized clients
+let resendInstance: Resend | null = null
+let twilioInstance: any = null
 
-// Twilio SMS Client
-export const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID!,
-  process.env.TWILIO_AUTH_TOKEN!
-)
+function getResend() {
+  if (!resendInstance) {
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error('RESEND_API_KEY environment variable is required')
+    }
+    resendInstance = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resendInstance
+}
+
+function getTwilio() {
+  if (!twilioInstance) {
+    if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
+      throw new Error('Twilio credentials are required')
+    }
+    twilioInstance = twilio(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN
+    )
+  }
+  return twilioInstance
+}
+
+// Legacy exports for backwards compatibility
+export const resend = {
+  get emails() {
+    return getResend().emails
+  }
+}
+
+export const twilioClient = {
+  get messages() {
+    return getTwilio().messages
+  }
+}
 
 // Email Templates
 export const emailTemplates = {
   // Audit Complete Email
   auditComplete: (businessName: string, score: number, reportUrl: string) => ({
     from: process.env.RESEND_FROM_EMAIL!,
-    subject: `📊 BusinessScope AI: ${businessName} Audit Complete (Score: ${score}/100)`,
+    subject: `📊 TableTalk Radar: ${businessName} Audit Complete (Score: ${score}/100)`,
     html: `
       <div style="font-family: 'Inter', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%); color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
-          <h1 style="margin: 0; font-size: 28px; font-weight: 700;">BusinessScope AI</h1>
+          <h1 style="margin: 0; font-size: 28px; font-weight: 700;">TableTalk Radar</h1>
           <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">AI-Powered Business Intelligence</p>
         </div>
         

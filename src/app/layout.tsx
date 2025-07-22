@@ -6,7 +6,7 @@ import { AuthProvider } from '@/components/AuthProvider'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'BusinessScope AI - Universal Business Intelligence Platform',
+  title: 'TableTalk Radar - AI-Powered Business Intelligence Platform',
   description: 'AI-Powered Business Intelligence for Every Industry - Comprehensive Analysis, Insights, and Growth Strategies',
 }
 

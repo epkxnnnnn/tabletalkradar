@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function HomePage() {
   return (
@@ -10,7 +11,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-bold text-white">BusinessScope AI</h1>
+              <Image src="/logo.png" alt="TableTalk Radar" width={150} height={40} className="h-10 w-auto" />
             </div>
             <div className="flex items-center space-x-4">
               <Link
@@ -166,7 +167,7 @@ export default function HomePage() {
       <footer className="bg-slate-800 border-t border-slate-700 mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center text-slate-400">
-            <p>&copy; 2024 BusinessScope AI. All rights reserved.</p>
+            <p>&copy; 2024 TableTalk Radar. All rights reserved.</p>
           </div>
         </div>
       </footer>
