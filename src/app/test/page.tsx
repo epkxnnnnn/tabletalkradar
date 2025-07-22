@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function TestPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -15,10 +17,10 @@ export default function TestPage() {
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Quick Links</h2>
           <div className="space-y-2">
-            <a href="/" className="block text-blue-600 hover:underline">→ Go to Main App</a>
-            <a href="/api/debug" className="block text-blue-600 hover:underline">→ Check Debug Info</a>
-            <a href="/api/health" className="block text-blue-600 hover:underline">→ Check API Health</a>
-            <a href="/api/test" className="block text-blue-600 hover:underline">→ Check Environment Variables</a>
+            <Link href="/" className="block text-blue-600 hover:underline">→ Go to Main App</Link>
+            <a href="/api/debug" target="_blank" rel="noopener noreferrer" className="block text-blue-600 hover:underline">→ Check Debug Info</a>
+            <a href="/api/health" target="_blank" rel="noopener noreferrer" className="block text-blue-600 hover:underline">→ Check API Health</a>
+            <a href="/api/test" target="_blank" rel="noopener noreferrer" className="block text-blue-600 hover:underline">→ Check Environment Variables</a>
           </div>
         </div>
 
