@@ -15,7 +15,11 @@
       "Bash(npm run lint)",
       "Bash(npm run type-check:*)",
       "Bash(grep:*)",
-      "Bash(vercel:*)"
+      "Bash(vercel:*)",
+      "Bash(npm run test:unit:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm run test:integration:*)",
+      "Bash(npm run test:smoke:*)"
     ],
     "deny": []
   }

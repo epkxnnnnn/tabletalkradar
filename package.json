@@ -67,7 +67,7 @@
   },
   "devDependencies": {
     "@lhci/cli": "^0.12.0",
-    "@types/jest": "^29.5.0",
+    "@types/jest": "^29.5.14",
     "@types/lodash": "^4.17.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "eslint": "^8",
@@ -76,6 +76,7 @@
     "jest-environment-jsdom": "^29.5.0",
     "prettier": "^3.0.0",
     "snyk": "^1.1200.0",
+    "ts-jest": "^29.4.0",
     "tsx": "^4.0.0"
   },
   "jest": {
@@ -83,9 +84,10 @@
     "setupFilesAfterEnv": [
       "<rootDir>/jest.setup.js"
     ],
-    "moduleNameMapping": {
+    "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1"
     },
+    "preset": "ts-jest",
     "collectCoverageFrom": [
       "src/**/*.{js,jsx,ts,tsx}",
       "!src/**/*.d.ts",
