@@ -20,7 +20,9 @@
       "Bash(mkdir:*)",
       "Bash(npm run test:integration:*)",
       "Bash(npm run test:smoke:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(node scripts/import-clients.js)",
+      "Bash(cat:*)"
     ],
     "deny": []
   }

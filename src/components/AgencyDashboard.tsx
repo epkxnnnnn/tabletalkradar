@@ -13,6 +13,7 @@ import AgencySettings from './AgencySettings'
 import AdvancedAnalytics from './AdvancedAnalytics'
 import PredictiveAnalytics from './PredictiveAnalytics'
 import TaskAutomation from './TaskAutomation'
+import QuickActions from './QuickActions'
 import { 
   EnhancedClient, 
   ClientPerformanceMetrics,
@@ -391,6 +392,9 @@ export default function AgencyDashboard() {
               </div>
             </div>
 
+            {/* Quick Actions */}
+            <QuickActions />
+            
             {/* Main Dashboard Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Recent Activity */}
