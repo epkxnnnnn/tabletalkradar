@@ -1,3 +1,3 @@
 export default function Hello() {
-  return <h1>Hello World - TableTalk Working!</h1>
+  return <h1>Hello World - BusinessScope AI Working!</h1>
 }

@@ -15,12 +15,12 @@ export const emailTemplates = {
   // Audit Complete Email
   auditComplete: (businessName: string, score: number, reportUrl: string) => ({
     from: process.env.RESEND_FROM_EMAIL!,
-    subject: `🍜 TableTalk Radar: ${businessName} Audit Complete (Score: ${score}/100)`,
+    subject: `📊 BusinessScope AI: ${businessName} Audit Complete (Score: ${score}/100)`,
     html: `
       <div style="font-family: 'Inter', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%); color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
-          <h1 style="margin: 0; font-size: 28px; font-weight: 700;">TableTalk Radar</h1>
-          <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">AI-Powered Restaurant Intelligence</p>
+          <h1 style="margin: 0; font-size: 28px; font-weight: 700;">BusinessScope AI</h1>
+          <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">AI-Powered Business Intelligence</p>
         </div>
         
         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
@@ -35,7 +35,7 @@ export const emailTemplates = {
           <ul style="color: #4a5568; line-height: 1.6;">
             <li>🔍 <strong>Perplexity:</strong> Market research & competitor analysis</li>
             <li>🛠️ <strong>Kimi:</strong> Technical SEO & website performance</li>
-            <li>🍽️ <strong>Claude:</strong> Restaurant industry expertise</li>
+            <li>💡 <strong>Claude:</strong> Industry-specific expertise</li>
             <li>💬 <strong>OpenAI:</strong> Customer sentiment analysis</li>
             <li>🌐 <strong>Gemini:</strong> Google ecosystem optimization</li>
           </ul>

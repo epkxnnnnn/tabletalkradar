@@ -1,24 +1,38 @@
-# TableTalk Radar - AI-Powered Restaurant Intelligence
+# BusinessScope AI - Universal Business Intelligence Platform
 
-## 🍜 5-AI Restaurant Intelligence That Never Sleeps
+## 📊 5-AI Business Intelligence That Never Sleeps
 
-TableTalk Radar is an enterprise-grade, AI-powered business intelligence platform specifically designed for restaurant owners and marketing agencies managing restaurant clients. The platform provides comprehensive auditing, monitoring, and optimization recommendations for restaurants' online presence across all digital touchpoints.
+BusinessScope AI is an enterprise-grade, AI-powered business intelligence platform designed for all types of businesses across every industry. The platform provides comprehensive auditing, monitoring, and optimization recommendations for any business's online presence across all digital touchpoints.
 
 ## 🚀 Features
 
 - **5-AI Analysis Engine**: Perplexity, Kimi, Claude, OpenAI, and Gemini working together
-- **Restaurant-Specific Analysis**: Menu optimization, delivery platforms, local SEO
-- **Real-time Review Monitoring**: Continuous tracking across all platforms
+- **Universal Business Support**: Works with any business type across all industries
+- **Industry-Specific Analysis**: Dynamic analysis tailored to your specific business type
+- **Real-time Performance Monitoring**: Continuous tracking across all platforms
 - **Automated Email & SMS Reporting**: Professional reports and critical alerts
-- **Multi-Client Management**: Perfect for marketing agencies
-- **Dark Red Brand Design**: Professional, restaurant-focused UI
+- **Multi-Client Management**: Perfect for marketing agencies and consultants
+- **Professional Design**: Clean, universal business-focused UI
+
+## 🏢 Supported Industries
+
+- **Professional Services**: Law firms, consulting, accounting, marketing agencies
+- **Healthcare & Wellness**: Medical practices, dental offices, spas, fitness centers
+- **Technology**: Software companies, SaaS platforms, web development, cybersecurity
+- **Retail & E-commerce**: Online stores, physical retail, fashion, electronics
+- **Financial Services**: Banking, investment firms, insurance, wealth management
+- **Manufacturing**: Consumer goods, industrial equipment, pharmaceuticals
+- **Education**: Schools, universities, online learning, corporate training
+- **Food & Hospitality**: Restaurants, cafes, hotels, catering services
+- **Non-Profit**: Charities, foundations, community organizations
+- **And Many More**: Startups, family businesses, cooperatives, government agencies
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
 - **Backend**: Next.js API Routes, Supabase
 - **Database**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth
+- **Authentication**: Supabase Auth with industry selection
 - **AI APIs**: Perplexity, Kimi, Claude, OpenAI, Gemini
 - **Communications**: Resend (email), Twilio (SMS)
 - **Deployment**: Vercel
@@ -37,32 +51,32 @@ TableTalk Radar is an enterprise-grade, AI-powered business intelligence platfor
 ### Installation
 
 1. Clone the repository:
-\`\`\`bash
-git clone https://github.com/your-username/tabletalk-radar.git
-cd tabletalk-radar
-\`\`\`
+```bash
+git clone https://github.com/your-username/businessscope-ai.git
+cd businessscope-ai
+```
 
 2. Install dependencies:
-\`\`\`bash
+```bash
 npm install
-\`\`\`
+```
 
 3. Set up environment variables:
-\`\`\`bash
+```bash
 cp .env.example .env.local
-\`\`\`
+```
 
-4. Fill in your API keys in \`.env.local\`
+4. Fill in your API keys in `.env.local`
 
-5. Set up Supabase database:
-   - Create tables: \`profiles\`, \`clients\`, \`audits\`
+5. Set up Supabase database by running the SQL from `supabase-setup.sql`:
+   - Create all tables with universal business support
    - Enable Row Level Security
-   - Set up authentication
+   - Set up authentication with industry fields
 
 6. Run the development server:
-\`\`\`bash
+```bash
 npm run dev
-\`\`\`
+```
 
 Open [http://localhost:3000](http://localhost:3000) to see the application.
 
@@ -70,9 +84,9 @@ Open [http://localhost:3000](http://localhost:3000) to see the application.
 
 ### Environment Variables
 
-Create a \`.env.local\` file with the following variables:
+Create a `.env.local` file with the following variables:
 
-\`\`\`env
+```env
 # AI APIs
 PERPLEXITY_API_KEY=your_perplexity_key
 KIMI_API_KEY=your_kimi_key
@@ -91,53 +105,18 @@ RESEND_FROM_EMAIL=your_sender_email
 TWILIO_ACCOUNT_SID=your_twilio_sid
 TWILIO_AUTH_TOKEN=your_twilio_token
 TWILIO_PHONE_NUMBER=your_twilio_number
-\`\`\`
+```
 
 ### Supabase Database Schema
 
-The application requires these tables in your Supabase database:
+The application uses a comprehensive universal business schema. Run the complete `supabase-setup.sql` file in your Supabase SQL editor to create all required tables with universal business support including:
 
-\`\`\`sql
--- Profiles table
-CREATE TABLE profiles (
-  id UUID REFERENCES auth.users ON DELETE CASCADE,
-  updated_at TIMESTAMP WITH TIME ZONE,
-  full_name TEXT,
-  email TEXT,
-  company_name TEXT,
-  role TEXT,
-  avatar_url TEXT,
-  PRIMARY KEY (id)
-);
-
--- Clients table  
-CREATE TABLE clients (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  business_name TEXT NOT NULL,
-  website TEXT,
-  address TEXT,
-  phone TEXT,
-  category TEXT NOT NULL,
-  owner_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  status TEXT DEFAULT 'active'
-);
-
--- Audits table
-CREATE TABLE audits (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
-  business_name TEXT NOT NULL,
-  website TEXT,
-  category TEXT NOT NULL,
-  overall_score INTEGER NOT NULL,
-  audit_data JSONB NOT NULL,
-  status TEXT DEFAULT 'completed'
-);
-\`\`\`
+- Profiles with industry and business_type fields
+- Clients with universal categorization
+- Audits with industry-specific data
+- Reports with dynamic templates
+- Action items and team management
+- And more...
 
 ## 🚀 Deployment
 
@@ -150,56 +129,66 @@ CREATE TABLE audits (
 ### Environment Variables for Production
 
 Add these to your Vercel dashboard:
-- All API keys from \`.env.local\`
-- Set \`NEXTAUTH_URL\` to your production domain
-- Set \`NODE_ENV=production\`
+- All API keys from `.env.local`
+- Set `NEXTAUTH_URL` to your production domain
+- Set `NODE_ENV=production`
 
 ## 📝 Usage
 
-### Running an Audit
+### Running a Universal Business Audit
 
-1. Fill in business information (name, website, address, phone)
-2. Select business category
+1. Sign up and select your industry and business type
+2. Fill in business information (name, website, location details)
 3. Click "Start Comprehensive 5-AI Audit"
-4. Wait for all AI analyses to complete
-5. Review results in the dashboard
+4. Wait for all AI analyses to complete with industry-specific context
+5. Review results tailored to your business type
+6. Get actionable recommendations specific to your industry
 
 ### Managing Multiple Clients (Agency Mode)
 
-1. Create client profiles in the system
-2. Run audits for multiple clients
-3. Track historical performance
-4. Send automated reports
+1. Create client profiles with their specific industries
+2. Run audits for multiple business types
+3. Track historical performance across different industries
+4. Send automated reports customized per business type
 
 ## 🎨 Design System
 
-The application uses a dark red brand color scheme:
-- Primary: #8B0000 (Dark Red)
-- Light: #DC143C (Light Red)  
-- Deep: #660000 (Deep Red)
-- Accent: #FF6B6B (Accent Red)
+The application uses a professional business color scheme:
+- Primary: #8B0000 (Business Red)
+- Light: #DC143C (Accent Red)  
+- Dark: #0F172A (Slate Dark)
+- Text: Clean whites and grays for professional appearance
 
 ## 🤖 AI Integration
 
 ### Supported AI Providers
 
-- **Perplexity**: Market research and competitor analysis
-- **Kimi (Moonshot)**: Technical SEO and website analysis
-- **Claude (Anthropic)**: Restaurant industry expertise
-- **OpenAI**: Customer sentiment analysis
-- **Google Gemini**: Google ecosystem optimization
+- **Perplexity**: Market research and competitor analysis with industry context
+- **Kimi (Moonshot)**: Technical SEO and website analysis for any business type
+- **Claude (Anthropic)**: Industry-specific expertise across all sectors
+- **OpenAI**: Customer sentiment analysis adapted to business type
+- **Google Gemini**: Google ecosystem optimization for any industry
+
+### Dynamic Industry Analysis
+
+Each AI provider receives contextual business information including:
+- Industry classification
+- Business type specifics
+- Target market focus
+- Business size and location type
+- Industry-specific metrics and KPIs
 
 ## 📊 Reporting
 
 ### Email Reports
 - Audit completion notifications
-- Weekly performance summaries
-- Critical alerts
+- Industry-specific performance summaries
+- Critical alerts tailored to business type
 
 ### SMS Alerts
 - Critical issues requiring immediate attention
-- Score improvements
-- New review notifications
+- Performance improvements
+- Industry-relevant notifications
 
 ## 🔐 Security
 
@@ -207,18 +196,22 @@ The application uses a dark red brand color scheme:
 - API keys stored as environment variables
 - Rate limiting on API endpoints
 - Input validation and sanitization
+- Industry-specific data protection
 
 ## 🧪 Testing
 
 Run tests:
-\`\`\`bash
-npm run test
-\`\`\`
+```bash
+npm run test:unit
+npm run test:integration
+npm run test:coverage
+```
 
 Run linting:
-\`\`\`bash
+```bash
 npm run lint
-\`\`\`
+npm run type-check
+```
 
 ## 📈 Performance
 
@@ -226,6 +219,7 @@ npm run lint
 - Image optimization with Next.js
 - API response caching
 - Database query optimization
+- Universal scoring algorithms for all business types
 
 ## 🤝 Contributing
 
@@ -241,17 +235,21 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🆘 Support
 
-For support, email support@tabletalkradar.com or create an issue in this repository.
+For support, email support@businessscope.ai or create an issue in this repository.
 
 ## 🗺️ Roadmap
 
+- [x] Universal business intelligence platform
+- [x] 10+ industry support with 60+ business types
+- [x] Dynamic AI analysis with business context
 - [ ] Mobile app development
 - [ ] Advanced analytics dashboard
 - [ ] White-label customization
 - [ ] API access for enterprise clients
 - [ ] Predictive analytics
 - [ ] Multi-language support
+- [ ] Industry-specific integrations
 
 ---
 
-Built with ❤️ for the restaurant industry by the TableTalk Radar team.
+Built with ❤️ for businesses of all types by the BusinessScope AI team.

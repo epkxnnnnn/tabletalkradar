@@ -1,0 +1,57 @@
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+// Admin client for server-side operations
+export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+})
+
+// Function to create superadmin account
+export async function createSuperAdmin() {
+  try {
+    // Create the user account
+    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
+      email: 'kphstk@gmail.com',
+      password: 'tabletalksuperadmin2025',
+      email_confirm: true,
+      user_metadata: {
+        full_name: 'Super Admin',
+        company_name: 'TableTalk Radar',
+        role: 'superadmin'
+      }
+    })
+
+    if (userError) {
+      console.error('Error creating superadmin user:', userError)
+      return { error: userError }
+    }
+
+    // Create profile record
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .insert({
+        id: userData.user.id,
+        full_name: 'Super Admin',
+        email: 'kphstk@gmail.com',
+        company_name: 'TableTalk Radar',
+        role: 'superadmin',
+        updated_at: new Date().toISOString()
+      })
+
+    if (profileError) {
+      console.error('Error creating superadmin profile:', profileError)
+      return { error: profileError }
+    }
+
+    console.log('Superadmin account created successfully:', userData.user.id)
+    return { success: true, user: userData.user }
+  } catch (error) {
+    console.error('Error creating superadmin:', error)
+    return { error }
+  }
+} 

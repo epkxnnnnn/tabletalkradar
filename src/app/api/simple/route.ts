@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   return NextResponse.json({
-    message: 'TableTalk Radar API is responding!',
+    message: 'BusinessScope AI API is responding!',
     timestamp: new Date().toISOString(),
     environment: {
       nodeEnv: process.env.NODE_ENV,

@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { aiAnalysis } from '@/lib/ai-clients'
 import { supabase } from '@/lib/supabase'
+import { BusinessData, universalScoringCategories } from '@/lib/business-types'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { businessName, website, address, phone, category, email } = body
+    const { businessName, website, address, phone, category, email, industry, business_type, target_market, business_size, location_type } = body
+    
+    // Create BusinessData object for AI analysis
+    const businessData: BusinessData = {
+      industry: industry || 'other',
+      business_type: business_type || category || 'other',
+      target_market: target_market || 'local',
+      size: business_size || 'small',
+      location_type: location_type || 'local'
+    }
 
     if (!businessName || !website) {
       return NextResponse.json(
@@ -22,11 +32,11 @@ export async function POST(request: NextRequest) {
       openaiResults,
       geminiResults
     ] = await Promise.all([
-      aiAnalysis.analyzeWithPerplexity(businessName, website, address, category),
-      aiAnalysis.analyzeWithKimi(website, category),
-      aiAnalysis.analyzeWithClaude(businessName, category),
-      aiAnalysis.analyzeWithOpenAI(businessName),
-      aiAnalysis.analyzeWithGemini(businessName)
+      aiAnalysis.analyzeWithPerplexity(businessName, website, address, businessData),
+      aiAnalysis.analyzeWithKimi(website, businessData),
+      aiAnalysis.analyzeWithClaude(businessName, businessData),
+      aiAnalysis.analyzeWithOpenAI(businessName, businessData),
+      aiAnalysis.analyzeWithGemini(businessName, businessData)
     ])
 
     // Calculate scores
@@ -43,20 +53,15 @@ export async function POST(request: NextRequest) {
     }
 
     const calculateOverallScore = (website: any, ai: any) => {
-      const weights = {
-        website: 0.3,
-        gmb: 0.25,
-        social: 0.2,
-        citations: 0.15,
-        seo: 0.1
-      }
-
+      // Use universal scoring categories
+      const weights = universalScoringCategories
+      
       return Math.round(
-        (website.overallScore * weights.website) +
-        (calculateGMBScore(ai.gmb) * weights.gmb) +
-        (85 * weights.social) +
-        (82 * weights.citations) +
-        (website.seoScore * weights.seo)
+        (website.overallScore * weights.online_presence.weight) +
+        (calculateGMBScore(ai.gmb) * weights.customer_experience.weight) +
+        (85 * weights.operational_excellence.weight) +
+        (82 * weights.market_performance.weight) +
+        (website.seoScore * weights.innovation_growth.weight)
       )
     }
 
@@ -66,7 +71,19 @@ export async function POST(request: NextRequest) {
     const auditResults = {
       auditId: Date.now().toString(),
       timestamp: new Date().toISOString(),
-      businessInfo: { businessName, website, address, phone, category, email },
+      businessInfo: { 
+        businessName, 
+        website, 
+        address, 
+        phone, 
+        category, 
+        email,
+        industry,
+        business_type,
+        target_market,
+        business_size,
+        location_type
+      },
       overallScore,
       aiInsights: perplexityResults,
       claudeInsights: claudeResults,
@@ -104,8 +121,8 @@ export async function POST(request: NextRequest) {
         totalFound: 23,
         consistent: 19,
         inconsistent: 4,
-        missing: ['Better Business Bureau', 'TripAdvisor', 'Foursquare'],
-        topDirectories: ['Google', 'Yelp', 'Facebook', 'Yellow Pages']
+        missing: ['Better Business Bureau', 'Chamber of Commerce', 'Industry Directories'],
+        topDirectories: ['Google', 'Bing Places', 'Facebook', 'Yellow Pages']
       },
       website: {
         score: kimiResults.overallScore,
@@ -118,27 +135,27 @@ export async function POST(request: NextRequest) {
       },
       recommendations: {
         immediate: [
-          'Update Google My Business with recent photos',
-          'Respond to all reviews within 24 hours',
+          'Update Google My Business with recent photos and information',
+          'Respond to all customer reviews within 24 hours',
           'Add missing meta descriptions to website pages',
-          'Create weekly Google My Business posts'
+          'Create consistent posting schedule for your business type'
         ],
         shortTerm: [
-          'Implement structured data markup for menu items',
-          'Optimize for voice search queries',
-          'Create social media content calendar',
-          'Fix website speed issues'
+          `Implement structured data markup for ${businessData.business_type} businesses`,
+          'Optimize for voice search queries in your industry',
+          'Create industry-specific content calendar',
+          'Fix website speed and performance issues'
         ],
         longTerm: [
-          'Develop comprehensive content marketing strategy',
-          'Launch customer loyalty program',
-          'Expand to additional review platforms',
-          'Implement advanced local SEO tactics'
+          `Develop comprehensive ${businessData.target_market} marketing strategy`,
+          'Launch customer engagement and retention program',
+          'Expand to additional industry-relevant platforms',
+          'Implement advanced SEO tactics for your business type'
         ],
         aiInsights: [
-          claudeResults?.analysis || 'Restaurant-specific analysis with Claude',
-          openaiResults?.insights || 'Customer sentiment analysis with OpenAI',
-          geminiResults?.analysis || 'Google ecosystem optimization with Gemini'
+          claudeResults?.analysis || `Industry-specific analysis for ${businessData.business_type}`,
+          openaiResults?.insights || 'Customer sentiment analysis completed',
+          geminiResults?.analysis || 'Google ecosystem optimization recommendations'
         ]
       }
     }
@@ -151,6 +168,9 @@ export async function POST(request: NextRequest) {
           business_name: businessName,
           website,
           category,
+          industry: businessData.industry,
+          business_type: businessData.business_type,
+          target_market: businessData.target_market,
           overall_score: overallScore,
           audit_data: auditResults,
           status: 'completed'

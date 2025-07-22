@@ -4,18 +4,15 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 45, 55, 72;
-  --background-start-rgb: 247, 250, 252;
-  --background-end-rgb: 255, 255, 255;
+  --foreground-rgb: 226, 232, 240;
+  --background-start-rgb: 15, 23, 42;
+  --background-end-rgb: 30, 41, 59;
   --brand-primary: 139, 0, 0;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 247, 250, 252;
-    --background-start-rgb: 45, 55, 72;
-    --background-end-rgb: 29, 39, 54;
-  }
+  --card-bg: 30, 41, 59;
+  --card-border: 51, 65, 85;
+  --text-primary: 226, 232, 240;
+  --text-secondary: 148, 163, 184;
+  --text-muted: 100, 116, 139;
 }
 
 body {
@@ -41,7 +38,7 @@ body {
 }
 
 .card-shadow {
-  box-shadow: 0 2px 8px rgba(139, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .focus-brand {
@@ -59,6 +56,6 @@ body {
   }
   50% {
     opacity: .8;
-    background-color: rgba(139, 0, 0, 0.1);
+    background-color: rgba(139, 0, 0, 0.2);
   }
 }

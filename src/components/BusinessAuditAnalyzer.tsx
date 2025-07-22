@@ -1,501 +1,420 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { Search, Globe, Star, MapPin, Phone, Clock, Camera, AlertTriangle, CheckCircle, XCircle, BarChart3, TrendingUp, Eye, Users, Download } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useAuth } from './AuthProvider'
 import { supabase } from '@/lib/supabase'
 
-interface AuditData {
-  businessName: string
-  website: string
-  address: string
-  phone: string
+interface Client {
+  id: string
+  business_name: string
   category: string
-  email?: string
+  industry: string
+  business_type: string | null
+  target_market: string | null
 }
 
-interface AuditResults {
-  auditId: string
-  timestamp: string
-  businessInfo: AuditData
-  overallScore: number
-  googleMyBusiness: {
-    score: number
-    verified: boolean
-    reviews: { count: number; average: number }
-    photos: number
-    posts: number
-    hours: boolean
-    issues: string[]
-  }
-  seo: {
-    score: number
-    title: any
-    metaDesc: any
-    headings: any
-    loading: number
-    mobile: boolean
-    ssl: boolean
-    issues: string[]
-    recommendations: string[]
-  }
-  socialMedia: any
-  citations: any
-  website: any
-  recommendations: {
-    immediate: string[]
-    shortTerm: string[]
-    longTerm: string[]
-    aiInsights: string[]
-  }
-  aiInsights?: any
-  claudeInsights?: any
-  openaiInsights?: any
-  geminiInsights?: any
-  restaurantAnalysis?: any
-  realtimeReviews?: any
-  competitorAnalysis?: any
-}
-
-const BusinessAuditAnalyzer: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('audit')
-  const [auditData, setAuditData] = useState<AuditData>({
-    businessName: '',
+export default function BusinessAuditAnalyzer() {
+  const { user } = useAuth()
+  const [auditData, setAuditData] = useState({
+    business_name: '',
     website: '',
     address: '',
     phone: '',
-    category: 'restaurant',
-    email: ''
+    category: ''
   })
-  
-  const [auditResults, setAuditResults] = useState<AuditResults | null>(null)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [savedAudits, setSavedAudits] = useState<any[]>([])
-  const [selectedAuditId, setSelectedAuditId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [results, setResults] = useState<any>(null)
+  const [clients, setClients] = useState<Client[]>([])
+  const [selectedClient, setSelectedClient] = useState<string>('')
+  const [userProfile, setUserProfile] = useState<any>(null)
 
-  // Load saved audits on component mount
   useEffect(() => {
-    loadSavedAudits()
-  }, [])
+    if (user) {
+      loadUserProfile()
+      loadClients()
+    }
+  }, [user])
 
-  const loadSavedAudits = async () => {
+  const loadUserProfile = async () => {
     try {
       const { data, error } = await supabase
-        .from('audits')
+        .from('profiles')
         .select('*')
-        .order('created_at', { ascending: false })
-        .limit(10)
+        .eq('id', user?.id)
+        .single()
 
-      if (error) throw error
-      setSavedAudits(data || [])
+      if (!error && data) {
+        setUserProfile(data)
+      }
     } catch (error) {
-      console.error('Error loading audits:', error)
+      console.error('Error loading profile:', error)
     }
   }
 
-  const runAudit = async () => {
-    if (!auditData.businessName || !auditData.website) {
-      alert('Please provide business name and website URL')
-      return
-    }
-
-    setIsAnalyzing(true)
-    
+  const loadClients = async () => {
     try {
-      // Call the safer API route
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id, business_name, category, industry, business_type, target_market')
+        .eq('user_id', user?.id)
+
+      if (!error && data) {
+        setClients(data)
+      }
+    } catch (error) {
+      console.error('Error loading clients:', error)
+    }
+  }
+
+  const handleInputChange = (field: string, value: string) => {
+    setAuditData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setResults(null)
+
+    try {
       const response = await fetch('/api/audit/run-safe', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(auditData)
+        body: JSON.stringify({
+          ...auditData,
+          client_id: selectedClient || null
+        }),
       })
 
-      const results = await response.json()
+      if (!response.ok) {
+        throw new Error('Audit failed')
+      }
+
+      const data = await response.json()
+      setResults(data)
+
+      // Save audit to database
+      await saveAuditToDatabase(data)
+
+    } catch (error) {
+      console.error('Error running audit:', error)
+      setResults({ error: 'Failed to run audit. Please try again.' })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const saveAuditToDatabase = async (auditResults: any) => {
+    try {
+      const response = await fetch('/api/audit/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          business_name: auditData.business_name,
+          website: auditData.website,
+          category: auditData.category,
+          overall_score: auditResults.overall_score || 0,
+          audit_data: auditResults,
+          client_id: selectedClient || null
+        }),
+      })
 
       if (!response.ok) {
-        console.error('Audit API error:', results)
-        alert(`Audit failed: ${results.message || results.error || 'Unknown error'}`)
-        return
+        console.error('Failed to save audit to database')
       }
-
-      // Check for partial success
-      if (results.debugInfo && results.debugInfo.totalErrors > 0) {
-        console.warn(`Audit completed with ${results.debugInfo.totalErrors} errors:`, results.errors)
-        alert(`Audit partially completed. Some AI providers failed. Check console for details.`)
-      }
-
-      setAuditResults(results as AuditResults)
-
-      // Reload saved audits
-      loadSavedAudits()
-
-      // Switch to results tab
-      setActiveTab('results')
-      
-    } catch (error: any) {
-      console.error('Audit failed:', error)
-      alert(`Audit failed: ${error.message || 'Network error. Please check your connection.'}`)
+    } catch (error) {
+      console.error('Error saving audit:', error)
     }
-    
-    setIsAnalyzing(false)
-  }
-
-
-  const ScoreCircle: React.FC<{ score: number; label: string; size?: 'md' | 'lg' }> = ({ score, label, size = 'md' }) => {
-    const radius = size === 'lg' ? 45 : 35
-    const circumference = 2 * Math.PI * radius
-    const strokeDasharray = circumference
-    const strokeDashoffset = circumference - (score / 100) * circumference
-    
-    const getColor = (score: number) => {
-      if (score >= 80) return '#10B981'
-      if (score >= 60) return '#F59E0B'
-      return '#EF4444'
-    }
-
-    return (
-      <div className="flex flex-col items-center">
-        <div className="relative">
-          <svg className={`transform -rotate-90 ${size === 'lg' ? 'w-24 h-24' : 'w-20 h-20'}`}>
-            <circle
-              cx={size === 'lg' ? 48 : 40}
-              cy={size === 'lg' ? 48 : 40}
-              r={radius}
-              stroke="#E5E7EB"
-              strokeWidth="8"
-              fill="none"
-            />
-            <circle
-              cx={size === 'lg' ? 48 : 40}
-              cy={size === 'lg' ? 48 : 40}
-              r={radius}
-              stroke={getColor(score)}
-              strokeWidth="8"
-              fill="none"
-              strokeDasharray={strokeDasharray}
-              strokeDashoffset={strokeDashoffset}
-              strokeLinecap="round"
-            />
-          </svg>
-          <div className={`absolute inset-0 flex items-center justify-center ${size === 'lg' ? 'text-2xl' : 'text-lg'} font-bold`}>
-            {score}
-          </div>
-        </div>
-        <span className="text-sm font-medium mt-2 text-center">{label}</span>
-      </div>
-    )
-  }
-
-  const IssueItem: React.FC<{ issue: string; severity?: 'high' | 'medium' | 'low' }> = ({ issue, severity = 'medium' }) => {
-    const icons = {
-      high: <XCircle className="text-red-500" size={16} />,
-      medium: <AlertTriangle className="text-yellow-500" size={16} />,
-      low: <Eye className="text-blue-500" size={16} />
-    }
-
-    return (
-      <div className="flex items-center gap-2 p-2 bg-gray-50 rounded">
-        {icons[severity]}
-        <span className="text-sm">{issue}</span>
-      </div>
-    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-light p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-card card-shadow p-6 mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 brand-gradient rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-xl">TR</span>
-            </div>
+    <div className="max-w-4xl mx-auto">
+      <div className="bg-slate-800 rounded-lg p-6 mb-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-white font-bold text-2xl mb-2">BusinessScope AI</h1>
+            <p className="text-slate-300">5-AI Universal Business Intelligence That Never Sleeps</p>
+          </div>
+        </div>
+
+        {/* Client Selection for Agencies */}
+        {userProfile?.role === 'agency' && clients.length > 0 && (
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2 text-slate-200">Select Client</label>
+            <select 
+              className="w-full p-3 border border-slate-600 rounded-lg bg-slate-700 text-white focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              value={selectedClient}
+              onChange={(e) => setSelectedClient(e.target.value)}
+            >
+              <option value="">Select a client...</option>
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.business_name} ({client.category})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h1 className="text-display font-bold text-gray-primary mb-2">TableTalk Radar</h1>
-              <p className="text-gray-secondary">5-AI Restaurant Intelligence That Never Sleeps</p>
+              <label className="block text-sm font-medium mb-2 text-slate-200">Business Name</label>
+              <input
+                type="text"
+                value={auditData.business_name}
+                onChange={(e) => handleInputChange('business_name', e.target.value)}
+                className="w-full p-3 border border-slate-600 rounded-lg bg-slate-700 text-white focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                placeholder="Enter business name"
+                required
+              />
             </div>
-          </div>
-        </div>
 
-        {/* Navigation Tabs */}
-        <div className="bg-white rounded-card card-shadow mb-6">
-          <div className="flex border-b">
-            {[
-              { id: 'audit', label: 'Run Audit', icon: Search },
-              { id: 'results', label: 'Results', icon: BarChart3 },
-              { id: 'history', label: 'Audit History', icon: Clock },
-              { id: 'report', label: 'Report', icon: Download }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? 'border-b-2 border-brand-primary text-brand-primary'
-                    : 'text-gray-secondary hover:text-gray-primary'
-                }`}
+            <div>
+              <label className="block text-sm font-medium mb-2 text-slate-200">Website</label>
+              <input
+                type="url"
+                value={auditData.website}
+                onChange={(e) => handleInputChange('website', e.target.value)}
+                className="w-full p-3 border border-slate-600 rounded-lg bg-slate-700 text-white focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                placeholder="https://example.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 text-slate-200">Address</label>
+              <input
+                type="text"
+                value={auditData.address}
+                onChange={(e) => handleInputChange('address', e.target.value)}
+                className="w-full p-3 border border-slate-600 rounded-lg bg-slate-700 text-white focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                placeholder="Enter business address"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 text-slate-200">Phone</label>
+              <input
+                type="tel"
+                value={auditData.phone}
+                onChange={(e) => handleInputChange('phone', e.target.value)}
+                className="w-full p-3 border border-slate-600 rounded-lg bg-slate-700 text-white focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                placeholder="Enter phone number"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 text-slate-200">Business Category</label>
+              <select 
+                className="w-full p-3 border border-slate-600 rounded-lg bg-slate-700 text-white focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                value={auditData.category}
+                onChange={(e) => handleInputChange('category', e.target.value)}
               >
-                <tab.icon size={20} />
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Audit Input Tab */}
-        {activeTab === 'audit' && (
-          <div className="bg-white rounded-card card-shadow p-6">
-            <h2 className="text-heading font-semibold mb-6">Business Information</h2>
-            
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-              <div>
-                <label className="block text-sm font-medium mb-2">Business Name</label>
-                <input
-                  type="text"
-                  value={auditData.businessName}
-                  onChange={(e) => setAuditData({...auditData, businessName: e.target.value})}
-                  placeholder="Enter business name"
-                  className="w-full p-3 border rounded-button focus-brand"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-2">Website URL</label>
-                <input
-                  type="url"
-                  value={auditData.website}
-                  onChange={(e) => setAuditData({...auditData, website: e.target.value})}
-                  placeholder="https://example.com"
-                  className="w-full p-3 border rounded-button focus-brand"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-2">Business Address</label>
-                <input
-                  type="text"
-                  value={auditData.address}
-                  onChange={(e) => setAuditData({...auditData, address: e.target.value})}
-                  placeholder="123 Main St, City, State"
-                  className="w-full p-3 border rounded-button focus-brand"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-2">Phone Number</label>
-                <input
-                  type="tel"
-                  value={auditData.phone}
-                  onChange={(e) => setAuditData({...auditData, phone: e.target.value})}
-                  placeholder="(555) 123-4567"
-                  className="w-full p-3 border rounded-button focus-brand"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Email (for notifications)</label>
-                <input
-                  type="email"
-                  value={auditData.email || ''}
-                  onChange={(e) => setAuditData({...auditData, email: e.target.value})}
-                  placeholder="owner@restaurant.com"
-                  className="w-full p-3 border rounded-button focus-brand"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-2">Business Category</label>
-                <select
-                  value={auditData.category}
-                  onChange={(e) => setAuditData({...auditData, category: e.target.value})}
-                  className="w-full p-3 border rounded-button focus-brand"
-                >
-                  <option value="restaurant">Restaurant (General)</option>
-                  <option value="thai">Thai Restaurant</option>
-                  <option value="sushi">Sushi Bar</option>
-                  <option value="pizza">Pizza Restaurant</option>
-                  <option value="mexican">Mexican Restaurant</option>
-                  <option value="italian">Italian Restaurant</option>
-                  <option value="chinese">Chinese Restaurant</option>
-                  <option value="fast-food">Fast Food</option>
-                  <option value="fine-dining">Fine Dining</option>
+                <option value="">Select Business Type</option>
+                <optgroup label="Professional Services">
+                  <option value="law-firm">Law Firm</option>
+                  <option value="accounting">Accounting Firm</option>
+                  <option value="consulting">Consulting Firm</option>
+                  <option value="marketing">Marketing Agency</option>
+                  <option value="real-estate">Real Estate Agency</option>
+                  <option value="insurance">Insurance Agency</option>
+                  <option value="web-design">Web Design Company</option>
+                  <option value="photography">Photography Studio</option>
+                  <option value="event-planning">Event Planning</option>
+                </optgroup>
+                <optgroup label="Food & Hospitality">
+                  <option value="restaurant">Restaurant</option>
                   <option value="cafe">Cafe</option>
                   <option value="bakery">Bakery</option>
-                </select>
-              </div>
+                  <option value="food-truck">Food Truck</option>
+                  <option value="catering">Catering Service</option>
+                  <option value="hotel">Hotel</option>
+                  <option value="bar">Bar & Nightlife</option>
+                </optgroup>
+                <optgroup label="Healthcare & Wellness">
+                  <option value="medical">Medical Practice</option>
+                  <option value="dental">Dental Office</option>
+                  <option value="spa">Spa & Wellness</option>
+                  <option value="fitness">Fitness Center</option>
+                  <option value="massage">Massage Therapy</option>
+                  <option value="chiropractic">Physical Therapy</option>
+                  <option value="veterinary">Veterinary Services</option>
+                </optgroup>
+                <optgroup label="Technology">
+                  <option value="software">Software Company</option>
+                  <option value="saas">SaaS Platform</option>
+                  <option value="mobile-app">Mobile App</option>
+                  <option value="web-development">Web Development</option>
+                  <option value="cybersecurity">Cybersecurity</option>
+                  <option value="cloud-services">Cloud Services</option>
+                </optgroup>
+                <optgroup label="Retail & E-commerce">
+                  <option value="online-store">Online Store</option>
+                  <option value="physical-retail">Physical Retail</option>
+                  <option value="fashion">Fashion</option>
+                  <option value="electronics">Electronics</option>
+                  <option value="home-garden">Home & Garden</option>
+                  <option value="beauty">Beauty & Personal Care</option>
+                  <option value="automotive">Automotive</option>
+                </optgroup>
+                <optgroup label="Manufacturing">
+                  <option value="consumer-goods">Consumer Goods</option>
+                  <option value="industrial-equipment">Industrial Equipment</option>
+                  <option value="food-processing">Food Processing</option>
+                  <option value="textiles">Textiles</option>
+                  <option value="pharmaceutical">Pharmaceutical</option>
+                </optgroup>
+                <optgroup label="Education">
+                  <option value="school">School</option>
+                  <option value="university">University</option>
+                  <option value="online-learning">Online Learning</option>
+                  <option value="vocational-training">Vocational Training</option>
+                  <option value="tutoring">Tutoring Services</option>
+                  <option value="corporate-training">Corporate Training</option>
+                </optgroup>
+                <optgroup label="Financial Services">
+                  <option value="banking">Banking</option>
+                  <option value="investment">Investment Firm</option>
+                  <option value="insurance-company">Insurance Company</option>
+                  <option value="accounting-firm">Accounting Firm</option>
+                  <option value="wealth-management">Wealth Management</option>
+                </optgroup>
+                <optgroup label="Non-Profit">
+                  <option value="charity">Charity Organization</option>
+                  <option value="foundation">Foundation</option>
+                  <option value="religious">Religious Organization</option>
+                  <option value="community-service">Community Service</option>
+                  <option value="advocacy">Advocacy Group</option>
+                </optgroup>
+                <optgroup label="Other">
+                  <option value="startup">Startup</option>
+                  <option value="family-business">Family Business</option>
+                  <option value="cooperative">Cooperative</option>
+                  <option value="social-enterprise">Social Enterprise</option>
+                  <option value="government">Government Agency</option>
+                  <option value="other">Other</option>
+                </optgroup>
+              </select>
             </div>
+          </div>
 
-            <div className="border-t pt-6">
-              <div className="bg-gradient-to-r from-brand-primary/5 to-brand-light/5 p-4 rounded-button mb-4">
-                <h3 className="text-lg font-semibold mb-2">5-AI Analysis Engine</h3>
-                <div className="grid md:grid-cols-2 gap-3 text-sm text-gray-secondary">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-brand-primary rounded-full"></div>
-                    <span><strong>Perplexity:</strong> Market Research & Competitors</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-brand-light rounded-full"></div>
-                    <span><strong>Kimi:</strong> Technical SEO & Performance</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-brand-accent rounded-full"></div>
-                    <span><strong>Claude:</strong> Restaurant Industry Expertise</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-success rounded-full"></div>
-                    <span><strong>OpenAI:</strong> Customer Sentiment Analysis</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-info rounded-full"></div>
-                    <span><strong>Gemini:</strong> Google Ecosystem Optimization</span>
-                  </div>
-                </div>
-              </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Running 5-AI Analysis...' : 'Run Business Audit'}
+          </button>
+        </form>
+
+        <div className="mt-6 p-4 bg-slate-700 rounded-lg">
+          <h3 className="text-white font-semibold mb-3">AI Engine Overview</h3>
+          <div className="grid md:grid-cols-2 gap-3 text-sm text-slate-300">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+              <span><strong>Perplexity:</strong> Market Research & Competitors</span>
             </div>
-
-            <button
-              onClick={runAudit}
-              disabled={isAnalyzing || !auditData.businessName || !auditData.website}
-              className="w-full flex items-center justify-center gap-2 px-6 py-4 brand-gradient text-white rounded-button hover:opacity-90 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all font-semibold"
-            >
-              {isAnalyzing ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  Analyzing with 5-AI Engine...
-                </>
-              ) : (
-                <>
-                  <Search size={20} />
-                  Start Comprehensive 5-AI Audit
-                </>
-              )}
-            </button>
-          </div>
-        )}
-
-        {/* Results and other tabs would continue here... */}
-        {/* For brevity, I'll add the key results section */}
-        
-        {activeTab === 'results' && auditResults && (
-          <div className="space-y-6">
-            {/* Overall Score */}
-            <div className="bg-white rounded-card card-shadow p-6">
-              <h2 className="text-heading font-semibold mb-6">Overall Business Score</h2>
-              <div className="flex justify-center mb-6">
-                <ScoreCircle score={auditResults.overallScore || 73} label="Overall Score" size="lg" />
-              </div>
-              
-              <div className="grid md:grid-cols-5 gap-4">
-                <ScoreCircle score={auditResults.googleMyBusiness.score} label="Google My Business" />
-                <ScoreCircle score={auditResults.seo.score} label="SEO" />
-                <ScoreCircle score={auditResults.citations.score} label="Citations" />
-                <ScoreCircle score={auditResults.website.score} label="Website" />
-                <ScoreCircle score={85} label="Social Media" />
-              </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+              <span><strong>Kimi:</strong> Technical SEO & Performance</span>
             </div>
-
-            {/* AI Insights Dashboard */}
-            {auditResults.recommendations && (
-              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-card card-shadow p-6 border border-indigo-200">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">5AI</span>
-                  </div>
-                  <h3 className="text-subheading font-semibold">Multi-AI Analysis Dashboard</h3>
-                </div>
-                
-                <div className="grid md:grid-cols-3 gap-4 mb-4">
-                  <div className="bg-white p-4 rounded-button border">
-                    <h4 className="font-medium text-brand-primary mb-2">Immediate Actions (This Week)</h4>
-                    <ul className="space-y-1 text-sm">
-                      {auditResults.recommendations.immediate.map((rec, idx) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <AlertTriangle size={14} className="text-brand-primary mt-0.5 flex-shrink-0" />
-                          <span>{rec}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  
-                  <div className="bg-white p-4 rounded-button border">
-                    <h4 className="font-medium text-warning mb-2">Short-term (Next Month)</h4>
-                    <ul className="space-y-1 text-sm">
-                      {auditResults.recommendations.shortTerm.map((rec, idx) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <Clock size={14} className="text-warning mt-0.5 flex-shrink-0" />
-                          <span>{rec}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  
-                  <div className="bg-white p-4 rounded-button border">
-                    <h4 className="font-medium text-success mb-2">Long-term (Next Quarter)</h4>
-                    <ul className="space-y-1 text-sm">
-                      {auditResults.recommendations.longTerm.map((rec, idx) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <TrendingUp size={14} className="text-success mt-0.5 flex-shrink-0" />
-                          <span>{rec}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-red-300 rounded-full"></div>
+              <span><strong>Claude:</strong> Industry Expertise & Insights</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+              <span><strong>OpenAI:</strong> Customer Sentiment Analysis</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+              <span><strong>Gemini:</strong> Google Ecosystem Optimization</span>
+            </div>
           </div>
-        )}
-
-        {/* Audit History Tab */}
-        {activeTab === 'history' && (
-          <div className="bg-white rounded-card card-shadow p-6">
-            <h2 className="text-heading font-semibold mb-6">Audit History</h2>
-            
-            {savedAudits.length === 0 ? (
-              <div className="text-center py-8 text-gray-secondary">
-                <Clock size={48} className="mx-auto mb-4 text-gray-300" />
-                <p>No audits found. Run your first audit to see history here.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {savedAudits.map((audit) => (
-                  <div 
-                    key={audit.id} 
-                    className="border rounded-button p-4 hover:bg-gray-50 cursor-pointer transition-colors"
-                    onClick={() => {
-                      setAuditResults(audit.audit_data)
-                      setSelectedAuditId(audit.id)
-                      setActiveTab('results')
-                    }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-medium">{audit.business_name}</h3>
-                        <p className="text-sm text-gray-secondary">{audit.website}</p>
-                        <p className="text-xs text-gray-secondary">
-                          {new Date(audit.created_at).toLocaleDateString()} at {new Date(audit.created_at).toLocaleTimeString()}
-                        </p>
-                      </div>
-                      
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-brand-primary">{audit.overall_score}</div>
-                        <div className="text-sm text-gray-secondary">Overall Score</div>
-                        <div className="flex items-center gap-1 mt-1">
-                          <span className="text-xs bg-brand-primary/10 text-brand-primary px-2 py-1 rounded">
-                            {audit.category}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        </div>
       </div>
+
+      {results && (
+        <div className="bg-slate-800 rounded-lg p-6">
+          <h2 className="text-2xl font-bold text-white mb-6">Audit Results</h2>
+          
+          {results.error ? (
+            <div className="text-red-400">{results.error}</div>
+          ) : (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-slate-700 p-4 rounded-lg">
+                  <h3 className="text-white font-semibold mb-2">Overall Score</h3>
+                  <div className="text-3xl font-bold text-red-400">{results.overall_score}/100</div>
+                </div>
+                <div className="bg-slate-700 p-4 rounded-lg">
+                  <h3 className="text-white font-semibold mb-2">Business Name</h3>
+                  <div className="text-slate-300">{results.business_name}</div>
+                </div>
+                <div className="bg-slate-700 p-4 rounded-lg">
+                  <h3 className="text-white font-semibold mb-2">Category</h3>
+                  <div className="text-slate-300">{results.category}</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-white font-semibold mb-3">Immediate Actions</h3>
+                  <ul className="space-y-2">
+                    {results.recommendations?.immediate?.map((rec: string, index: number) => (
+                      <li key={index} className="flex items-start gap-2 text-slate-300">
+                        <span className="text-red-400">•</span>
+                        {rec}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold mb-3">Short Term (1-4 weeks)</h3>
+                  <ul className="space-y-2">
+                    {results.recommendations?.shortTerm?.map((rec: string, index: number) => (
+                      <li key={index} className="flex items-start gap-2 text-slate-300">
+                        <span className="text-blue-400">•</span>
+                        {rec}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-white font-semibold mb-3">Long Term (1-3 months)</h3>
+                <ul className="space-y-2">
+                  {results.recommendations?.longTerm?.map((rec: string, index: number) => (
+                    <li key={index} className="flex items-start gap-2 text-slate-300">
+                      <span className="text-green-400">•</span>
+                      {rec}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-white font-semibold mb-3">AI Insights</h3>
+                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   {Object.entries(results.aiInsights || {}).map(([ai, insight]) => (
+                     <div key={ai} className="bg-slate-700 p-3 rounded-lg">
+                       <div className="text-red-400 font-medium capitalize">{ai}</div>
+                       <div className="text-slate-300 text-sm">{String(insight)}</div>
+                     </div>
+                   ))}
+                 </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
-
-export default BusinessAuditAnalyzer

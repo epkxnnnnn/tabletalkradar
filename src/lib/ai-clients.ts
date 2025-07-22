@@ -1,6 +1,7 @@
 import OpenAI from 'openai'
 import Anthropic from '@anthropic-ai/sdk'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { getBusinessTypePromptContext, getIndustrySpecificAnalysis, BusinessData } from './business-types'
 
 // Lazy-loaded clients to avoid build-time initialization
 const getOpenAI = () => {
@@ -76,14 +77,21 @@ export const kimiClient = {
 // AI Analysis Functions
 export const aiAnalysis = {
   // Perplexity - Market Research & Competitor Analysis
-  async analyzeWithPerplexity(businessName: string, website: string, address: string, category: string) {
+  async analyzeWithPerplexity(businessName: string, website: string, address: string, businessData: BusinessData) {
+    const context = getBusinessTypePromptContext(businessData)
+    const analysis = getIndustrySpecificAnalysis(businessData)
+    
     const prompt = `Analyze the online presence for "${businessName}" at ${website}. 
+    
+    Business Context: ${context}
+    Key Metrics: ${analysis.primaryMetrics.join(', ')}
+    Industry Indicators: ${analysis.keyIndicators.join(', ')}
     
     Please provide:
     1. Google My Business analysis (verified status, reviews, photos, recent posts)
-    2. Top 3 competitors in ${category} industry near ${address}
-    3. Industry-specific recommendations for ${category} businesses
-    4. Local SEO opportunities
+    2. Top 3 competitors in ${businessData.business_type} industry near ${address}
+    3. Industry-specific recommendations for ${businessData.business_type} businesses
+    4. Local SEO opportunities for ${businessData.target_market} market
     5. Social media presence assessment
     
     Format as JSON with sections: gmb, competitors, recommendations, localSEO, socialMedia`
@@ -105,20 +113,26 @@ export const aiAnalysis = {
   },
 
   // Kimi - Technical SEO & Website Analysis
-  async analyzeWithKimi(website: string, category: string) {
+  async analyzeWithKimi(website: string, businessData: BusinessData) {
+    const context = getBusinessTypePromptContext(businessData)
+    const analysis = getIndustrySpecificAnalysis(businessData)
+    
     const prompt = `Perform a comprehensive SEO and technical audit for ${website}. 
 
+    Business Context: ${context}
+    Focus Areas: ${analysis.primaryMetrics.join(', ')}
+    
     Analyze:
-    1. Page titles and meta descriptions
-    2. Heading structure (H1, H2, H3)
-    3. Page speed and performance
+    1. Page titles and meta descriptions optimized for ${businessData.business_type}
+    2. Heading structure (H1, H2, H3) with industry-relevant keywords
+    3. Page speed and performance for ${businessData.target_market} audience
     4. Mobile responsiveness
     5. SSL certificate
-    6. Contact information presence
-    7. Local business schema
-    8. Image alt tags
-    9. Internal linking
-    10. Content quality for ${category} business
+    6. Contact information and business details presence
+    7. Local business schema for ${businessData.location_type} presence
+    8. Image alt tags with industry context
+    9. Internal linking strategy
+    10. Content quality and relevance for ${businessData.business_type} business
 
     Provide specific issues found and actionable recommendations. Format as JSON with scores 0-100.`
 
@@ -173,16 +187,26 @@ export const aiAnalysis = {
     }
   },
 
-  // Claude - Restaurant Industry Expertise
-  async analyzeWithClaude(businessName: string, category: string) {
-    const prompt = `As a restaurant industry expert, analyze "${businessName}" for:
-    1. Menu optimization for online visibility
-    2. Food photography and visual appeal analysis  
-    3. Customer journey optimization
-    4. Delivery/pickup experience audit
-    5. Local food trend alignment
-    6. Health/dietary trend compliance (vegan, gluten-free, etc.)
-    Provide actionable insights for ${category} business.`
+  // Claude - Industry Expertise Analysis
+  async analyzeWithClaude(businessName: string, businessData: BusinessData) {
+    const context = getBusinessTypePromptContext(businessData)
+    const analysis = getIndustrySpecificAnalysis(businessData)
+    
+    const prompt = `As an industry expert, analyze "${businessName}" for:
+    
+    Business Context: ${context}
+    Key Focus Areas: ${analysis.primaryMetrics.join(', ')}
+    Industry Indicators: ${analysis.keyIndicators.join(', ')}
+    
+    Provide detailed analysis on:
+    1. Service/product optimization for online visibility
+    2. Visual content and brand presentation analysis
+    3. Customer journey optimization for ${businessData.target_market} market
+    4. Service delivery experience audit
+    5. Industry trend alignment and competitive positioning
+    6. Compliance and best practice adherence
+    
+    Provide actionable insights specific to ${businessData.business_type} in the ${businessData.industry} sector.`
 
     try {
       const anthropic = getAnthropic()
@@ -203,15 +227,24 @@ export const aiAnalysis = {
   },
 
   // OpenAI - Customer Sentiment Analysis
-  async analyzeWithOpenAI(businessName: string) {
-    const prompt = `Analyze the online reputation and customer sentiment for "${businessName}" restaurant. Focus on:
+  async analyzeWithOpenAI(businessName: string, businessData: BusinessData) {
+    const context = getBusinessTypePromptContext(businessData)
+    const analysis = getIndustrySpecificAnalysis(businessData)
+    
+    const prompt = `Analyze the online reputation and customer sentiment for "${businessName}". 
+    
+    Business Context: ${context}
+    Key Metrics: ${analysis.primaryMetrics.join(', ')}
+    
+    Focus on:
     1. Review sentiment analysis across platforms
     2. Customer pain points identification
-    3. Service quality indicators
-    4. Food quality mentions
-    5. Pricing perception analysis
-    6. Competitor comparison insights
-    Provide detailed customer experience insights.`
+    3. Service/product quality indicators
+    4. Value proposition and pricing perception
+    5. Customer experience touchpoints
+    6. Competitor comparison insights in ${businessData.business_type} sector
+    
+    Provide detailed customer experience insights for ${businessData.target_market} market.`
 
     try {
       const openai = getOpenAI()
@@ -232,20 +265,27 @@ export const aiAnalysis = {
   },
 
   // Gemini - Google Ecosystem Optimization
-  async analyzeWithGemini(businessName: string) {
-    const prompt = `Analyze the online presence and digital marketing effectiveness for "${businessName}" restaurant. 
+  async analyzeWithGemini(businessName: string, businessData: BusinessData) {
+    const context = getBusinessTypePromptContext(businessData)
+    const analysis = getIndustrySpecificAnalysis(businessData)
+    
+    const prompt = `Analyze the online presence and digital marketing effectiveness for "${businessName}". 
 
+    Business Context: ${context}
+    Target Market: ${businessData.target_market} (${businessData.location_type})
+    Key Performance Indicators: ${analysis.keyIndicators.join(', ')}
+    
     Focus on:
-    1. Google Ads and local advertising opportunities
-    2. Voice search optimization for "near me" queries
-    3. Schema markup and structured data analysis
-    4. Mobile user experience and page speed
-    5. Local business citations and NAP consistency
+    1. Google Ads and advertising opportunities for ${businessData.business_type}
+    2. Voice search optimization for industry-relevant "near me" queries
+    3. Schema markup and structured data for ${businessData.business_type} businesses
+    4. Mobile user experience and page speed optimization
+    5. Business citations and NAP consistency for ${businessData.location_type} presence
     6. Integration opportunities with Google services
-    7. Competition in Google Search results
-    8. Recommendations for Google My Business optimization
+    7. Competition analysis in Google Search results for ${businessData.business_type}
+    8. Google My Business optimization for ${businessData.industry} sector
 
-    Provide specific, actionable insights for improving Google visibility.`
+    Provide specific, actionable insights for improving Google visibility in the ${businessData.target_market} market.`
 
     try {
       const genAI = getGenAI()

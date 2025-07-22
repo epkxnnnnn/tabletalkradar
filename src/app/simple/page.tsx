@@ -1,7 +1,7 @@
 export default function SimplePage() {
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial' }}>
-      <h1>TableTalk Radar - Simple Test</h1>
+      <h1>BusinessScope AI - Simple Test</h1>
       <p>If you can see this, the basic deployment is working.</p>
       <p>Time: {new Date().toISOString()}</p>
       <div>
