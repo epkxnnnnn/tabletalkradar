@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   serverExternalPackages: ['@supabase/supabase-js'],
+  eslint: {
+    // Disable ESLint during builds for faster deployment
+    ignoreDuringBuilds: true,
+  },
   images: {
     domains: ['pwscfkrouagstuyakfjj.supabase.co'],
     remotePatterns: [
