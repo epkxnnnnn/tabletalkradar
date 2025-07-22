@@ -101,8 +101,8 @@ const BusinessAuditAnalyzer: React.FC = () => {
     setIsAnalyzing(true)
     
     try {
-      // Call the API route to run the audit
-      const response = await fetch('/api/audit/run', {
+      // Call the safer API route
+      const response = await fetch('/api/audit/run-safe', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -110,19 +110,31 @@ const BusinessAuditAnalyzer: React.FC = () => {
         body: JSON.stringify(auditData)
       })
 
+      const results = await response.json()
+
       if (!response.ok) {
-        throw new Error(`Audit failed: ${response.statusText}`)
+        console.error('Audit API error:', results)
+        alert(`Audit failed: ${results.message || results.error || 'Unknown error'}`)
+        return
       }
 
-      const results: AuditResults = await response.json()
-      setAuditResults(results)
+      // Check for partial success
+      if (results.debugInfo && results.debugInfo.totalErrors > 0) {
+        console.warn(`Audit completed with ${results.debugInfo.totalErrors} errors:`, results.errors)
+        alert(`Audit partially completed. Some AI providers failed. Check console for details.`)
+      }
+
+      setAuditResults(results as AuditResults)
+
+      // Reload saved audits
+      loadSavedAudits()
 
       // Switch to results tab
       setActiveTab('results')
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Audit failed:', error)
-      alert('Audit failed. Please check your configuration and try again.')
+      alert(`Audit failed: ${error.message || 'Network error. Please check your connection.'}`)
     }
     
     setIsAnalyzing(false)
