@@ -19,7 +19,8 @@
       "Bash(npm run test:unit:*)",
       "Bash(mkdir:*)",
       "Bash(npm run test:integration:*)",
-      "Bash(npm run test:smoke:*)"
+      "Bash(npm run test:smoke:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": []
   }

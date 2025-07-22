@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from './AuthProvider'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { businessCategories } from '@/lib/business-types'
+import { supabase } from '@/lib/supabase'
 import Image from 'next/image'
 
 export default function SignupForm() {
+  const searchParams = useSearchParams()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -19,8 +21,63 @@ export default function SignupForm() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [invitationData, setInvitationData] = useState<{
+    agencyName: string
+    role: string
+    valid: boolean
+  } | null>(null)
+  const [invitationLoading, setInvitationLoading] = useState(false)
   const { signUp } = useAuth()
   const router = useRouter()
+
+  // Check for invitation on component mount
+  useEffect(() => {
+    const invitationToken = searchParams.get('invitation')
+    const agencyName = searchParams.get('agency')
+    
+    if (invitationToken) {
+      validateInvitation(invitationToken, agencyName)
+    }
+  }, [searchParams])
+
+  const validateInvitation = async (token: string, agencyName: string | null) => {
+    setInvitationLoading(true)
+    try {
+      const { data: invitation, error } = await supabase
+        .from('agency_memberships')
+        .select(`
+          *,
+          agency:agencies(name)
+        `)
+        .eq('invitation_token', token)
+        .eq('status', 'invited')
+        .gt('invitation_expires_at', new Date().toISOString())
+        .single()
+
+      if (error || !invitation) {
+        setError('Invalid or expired invitation. Please contact the agency administrator.')
+        return
+      }
+
+      setInvitationData({
+        agencyName: invitation.agency?.name || agencyName || 'Unknown Agency',
+        role: invitation.role,
+        valid: true
+      })
+
+      // Pre-fill form with agency role
+      setFormData(prev => ({
+        ...prev,
+        role: 'agency'
+      }))
+
+    } catch (error) {
+      console.error('Error validating invitation:', error)
+      setError('Failed to validate invitation. Please try again.')
+    } finally {
+      setInvitationLoading(false)
+    }
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -59,7 +116,35 @@ export default function SignupForm() {
     if (error) {
       setError(error.message)
     } else {
-      router.push('/auth/verify-email')
+      // If this is an invitation signup, activate the membership
+      const invitationToken = searchParams.get('invitation')
+      if (invitationToken && invitationData?.valid) {
+        try {
+          // Get the newly created user
+          const { data: user } = await supabase.auth.getUser()
+          
+          if (user.user) {
+            // Update the invitation to link it to the new user and activate it
+            await supabase
+              .from('agency_memberships')
+              .update({
+                user_id: user.user.id,
+                status: 'active',
+                joined_at: new Date().toISOString()
+              })
+              .eq('invitation_token', invitationToken)
+
+            router.push('/dashboard?welcome=agency')
+          } else {
+            router.push('/auth/verify-email')
+          }
+        } catch (inviteError) {
+          console.error('Error processing invitation:', inviteError)
+          router.push('/auth/verify-email')
+        }
+      } else {
+        router.push('/auth/verify-email')
+      }
     }
     
     setLoading(false)
@@ -73,12 +158,39 @@ export default function SignupForm() {
             <Image src="/logo.png" alt="TableTalk Radar" width={200} height={50} className="h-12 w-auto" />
           </div>
           <h2 className="text-center text-3xl font-extrabold text-white">
-            Create your account
+            {invitationData ? 'Join Your Team' : 'Create your account'}
           </h2>
           <p className="mt-2 text-center text-sm text-slate-400">
-            Join TableTalk Radar for AI-powered business intelligence
+            {invitationData 
+              ? `You've been invited to join ${invitationData.agencyName}`
+              : 'Join TableTalk Radar for AI-powered business intelligence'
+            }
           </p>
         </div>
+
+        {invitationLoading && (
+          <div className="bg-slate-800 p-4 rounded-md">
+            <div className="text-center text-slate-300">Validating invitation...</div>
+          </div>
+        )}
+
+        {invitationData && (
+          <div className="bg-gradient-to-r from-red-900/20 to-red-800/20 border border-red-500/30 p-4 rounded-lg">
+            <div className="flex items-center space-x-3">
+              <div className="text-2xl">🎉</div>
+              <div>
+                <h3 className="text-white font-semibold">Team Invitation</h3>
+                <p className="text-sm text-slate-300">
+                  Join <span className="font-medium">{invitationData.agencyName}</span> as{' '}
+                  <span className="font-medium capitalize">
+                    {invitationData.role === 'client_manager' ? 'Client Manager' : invitationData.role}
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>

@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from './AuthProvider'
+import { useAgency } from './AgencyProvider'
 import { supabase } from '@/lib/supabase'
+import AgencyDashboard from './AgencyDashboard'
+import AgencyCreation from './AgencyCreation'
 import BusinessAuditAnalyzer from './BusinessAuditAnalyzer'
 import ClientManager from './ClientManager'
 import AuditHistory from './AuditHistory'
@@ -25,10 +28,12 @@ interface Profile {
 
 export default function Dashboard() {
   const { user, signOut } = useAuth()
+  const { currentAgency, membership, loading: agencyLoading, availableAgencies } = useAgency()
   const { toasts, removeToast } = useToast()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [activeTab, setActiveTab] = useState('audit')
   const [loading, setLoading] = useState(true)
+  const [showAgencyCreation, setShowAgencyCreation] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -57,13 +62,14 @@ export default function Dashboard() {
     await signOut()
   }
 
-  const isSuperAdmin = profile?.role === 'superadmin'
-  const isAgency = profile?.role === 'agency'
+  const isSuperAdmin = profile?.role === 'superadmin' || user?.email === 'kphstk@gmail.com'
+  const isAgency = profile?.role === 'agency' || currentAgency
+  const hasAgencyAccess = currentAgency && membership
 
-  if (loading) {
+  if (loading || agencyLoading) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+        <div className="text-white">Loading dashboard...</div>
       </div>
     )
   }
@@ -72,6 +78,51 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-white">Please sign in to access the dashboard.</div>
+      </div>
+    )
+  }
+
+  // If user has agency access, show the new agency dashboard
+  if (hasAgencyAccess) {
+    return <AgencyDashboard />
+  }
+
+  // Show agency creation flow if user wants to create one
+  if (showAgencyCreation) {
+    return (
+      <AgencyCreation
+        onAgencyCreated={() => setShowAgencyCreation(false)}
+        onCancel={() => setShowAgencyCreation(false)}
+      />
+    )
+  }
+
+  // Show agency creation option if user has no agencies but profile suggests they should
+  if (availableAgencies.length === 0 && (profile?.role === 'agency' || isSuperAdmin)) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="max-w-md mx-auto">
+            <h2 className="text-2xl font-bold mb-4">Create Your Agency</h2>
+            <p className="text-slate-400 mb-6">
+              Get started by creating your agency to manage multiple clients with AI-powered insights.
+            </p>
+            <div className="space-y-4">
+              <button 
+                onClick={() => setShowAgencyCreation(true)}
+                className="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium"
+              >
+                Create Agency
+              </button>
+              <button 
+                onClick={() => window.location.reload()}
+                className="w-full bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg font-medium"
+              >
+                Continue as Individual User
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
