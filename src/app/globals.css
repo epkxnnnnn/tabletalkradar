@@ -1,0 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 45, 55, 72;
+  --background-start-rgb: 247, 250, 252;
+  --background-end-rgb: 255, 255, 255;
+  --brand-primary: 139, 0, 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 247, 250, 252;
+    --background-start-rgb: 45, 55, 72;
+    --background-end-rgb: 29, 39, 54;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+  font-family: 'Inter', sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* TableTalk Radar custom styles */
+.brand-gradient {
+  background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%);
+}
+
+.card-shadow {
+  box-shadow: 0 2px 8px rgba(139, 0, 0, 0.1);
+}
+
+.focus-brand {
+  @apply focus:ring-2 focus:ring-brand-primary focus:border-brand-primary;
+}
+
+/* Loading animations */
+.animate-pulse-brand {
+  animation: pulse-brand 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-brand {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .8;
+    background-color: rgba(139, 0, 0, 0.1);
+  }
+}
