@@ -2,18 +2,22 @@ import OpenAI from 'openai'
 import Anthropic from '@anthropic-ai/sdk'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
-// OpenAI client
-export const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-})
+// Lazy-loaded clients to avoid build-time initialization
+const getOpenAI = () => {
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY!,
+  })
+}
 
-// Anthropic Claude client
-export const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-})
+const getAnthropic = () => {
+  return new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY!,
+  })
+}
 
-// Google Gemini client
-export const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY!)
+const getGenAI = () => {
+  return new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY!)
+}
 
 // Perplexity API (uses standard fetch)
 export const perplexityClient = {
@@ -181,6 +185,7 @@ export const aiAnalysis = {
     Provide actionable insights for ${category} business.`
 
     try {
+      const anthropic = getAnthropic()
       const response = await anthropic.messages.create({
         model: 'claude-3-sonnet-20240229',
         max_tokens: 1000,
@@ -209,6 +214,7 @@ export const aiAnalysis = {
     Provide detailed customer experience insights.`
 
     try {
+      const openai = getOpenAI()
       const response = await openai.chat.completions.create({
         model: 'gpt-4',
         messages: [{ role: 'user', content: prompt }],
@@ -242,6 +248,7 @@ export const aiAnalysis = {
     Provide specific, actionable insights for improving Google visibility.`
 
     try {
+      const genAI = getGenAI()
       const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
       const result = await model.generateContent(prompt)
       const response = await result.response
