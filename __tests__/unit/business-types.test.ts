@@ -1,4 +1,4 @@
-import { businessCategories, getIndustryConfig, getBusinessTypePromptContext } from '@/lib/business-types'
+import { businessCategories, getIndustryConfig, getBusinessTypePromptContext, BusinessData } from '@/lib/business-types'
 
 describe('Business Types', () => {
   test('businessCategories should contain expected industries', () => {
@@ -18,12 +18,12 @@ describe('Business Types', () => {
   })
 
   test('getBusinessTypePromptContext should return formatted string', () => {
-    const businessData = {
+    const businessData: BusinessData = {
       industry: 'food-hospitality',
       business_type: 'restaurant',
       target_market: 'local families',
-      business_size: 'small',
-      location_type: 'physical'
+      size: 'small',
+      location_type: 'local'
     }
     
     const context = getBusinessTypePromptContext(businessData)

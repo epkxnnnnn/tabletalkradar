@@ -118,11 +118,16 @@ jobs:
         run: npm audit --audit-level=moderate
 
       - name: Run Snyk security scan
+        if: secrets.SNYK_TOKEN != ''
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --severity-threshold=high
+          
+      - name: Log Snyk scan skipped
+        if: secrets.SNYK_TOKEN == ''
+        run: echo "Snyk security scan skipped - SNYK_TOKEN not configured"
 
   # Build
   build:
@@ -270,7 +275,7 @@ jobs:
     if: always()
     steps:
       - name: Notify Slack on Success
-        if: success()
+        if: success() && secrets.SLACK_WEBHOOK_URL != ''
         uses: 8398a7/action-slack@v3
         with:
           status: success
@@ -279,10 +284,14 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Notify Slack on Failure
-        if: failure()
+        if: failure() && secrets.SLACK_WEBHOOK_URL != ''
         uses: 8398a7/action-slack@v3
         with:
           status: failure
           text: 'Deployment to production failed! ❌'
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          
+      - name: Log notification skipped
+        if: secrets.SLACK_WEBHOOK_URL == ''
+        run: echo "Slack notifications skipped - SLACK_WEBHOOK_URL not configured" 
