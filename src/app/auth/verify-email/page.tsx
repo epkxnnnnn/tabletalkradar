@@ -7,7 +7,7 @@ export default function VerifyEmailPage() {
             Check your email
           </h2>
           <p className="mt-2 text-center text-sm text-slate-400">
-            We've sent you a verification link to confirm your email address
+            We&apos;ve sent you a verification link to confirm your email address
           </p>
         </div>
         <div className="bg-slate-800 p-6 rounded-lg">
@@ -15,7 +15,7 @@ export default function VerifyEmailPage() {
             Please check your email and click the verification link to complete your registration.
           </p>
           <p className="text-slate-400 text-sm">
-            If you don't see the email, check your spam folder.
+            If you don&apos;t see the email, check your spam folder.
           </p>
         </div>
         <div>

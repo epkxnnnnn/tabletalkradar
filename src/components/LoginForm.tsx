@@ -99,7 +99,7 @@ export default function LoginForm() {
             </div>
             <div className="text-sm">
               <a href="/auth/signup" className="font-medium text-red-400 hover:text-red-300">
-                Don't have an account?
+                Don&apos;t have an account?
               </a>
             </div>
           </div>

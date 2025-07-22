@@ -173,7 +173,7 @@ export function getBusinessTypePromptContext(businessData: BusinessData): string
   return `This is a ${businessData.business_type} in the ${config.name} industry, targeting ${businessData.target_market} market. Key focus areas include: ${config.focusAreas.join(', ')}.`
 }
 
-export default {
+const businessTypesExport = {
   businessCategories,
   universalScoringCategories,
   getIndustryConfig,
@@ -181,3 +181,5 @@ export default {
   getIndustrySpecificAnalysis,
   getBusinessTypePromptContext
 }
+
+export default businessTypesExport
