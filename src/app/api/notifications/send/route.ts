@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { logger } from '@/lib/logger'
 import NotificationService from '@/lib/notifications'
+import Resend from 'resend'
 
 async function createSupabaseClient() {
   const cookieStore = await cookies()
