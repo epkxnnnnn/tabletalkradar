@@ -147,7 +147,7 @@ export function AgencyProvider({ children }: { children: React.ReactNode }) {
       const { data: existingAgency } = await supabase
         .from('agencies')
         .select('*')
-        .eq('name', 'TableTalk Agency')
+        .eq('name', 'Rep Pro Marketing Agency')
         .single()
 
       let mainAgency = existingAgency
@@ -157,13 +157,13 @@ export function AgencyProvider({ children }: { children: React.ReactNode }) {
         const { data: newAgency, error: createError } = await supabase
           .from('agencies')
           .insert({
-            name: 'TableTalk Agency',
+            name: 'Rep Pro Marketing Agency',
             owner_id: user.id,
             subscription_plan: 'enterprise',
             subscription_status: 'active',
             settings: {
               branding: {
-                company_name: 'TableTalk Agency',
+                company_name: 'Rep Pro Marketing Agency',
                 primary_color: '#3b82f6',
                 logo_url: null
               }
