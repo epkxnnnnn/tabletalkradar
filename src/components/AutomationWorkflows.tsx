@@ -309,7 +309,7 @@ export default function AutomationWorkflows() {
           </svg>
         </div>
         <h3 className="text-lg font-medium text-white mb-2">No Access</h3>
-        <p className="text-slate-400">You don't have permission to manage automation workflows.</p>
+        <p className="text-slate-400">You don&apos;t have permission to manage automation workflows.</p>
       </div>
     )
   }

@@ -356,7 +356,7 @@ export default function ManualPostHelper() {
         <div className="space-y-3 text-slate-300 text-sm">
           <div className="flex items-start space-x-2">
             <span className="text-blue-400 font-bold">1.</span>
-            <span>Select the client you're creating content for</span>
+            <span>Select the client you&apos;re creating content for</span>
           </div>
           <div className="flex items-start space-x-2">
             <span className="text-blue-400 font-bold">2.</span>

@@ -472,7 +472,7 @@ export function withAgencyContext<P extends object>(
         <div className="min-h-screen bg-slate-900 flex items-center justify-center">
           <div className="text-white text-center">
             <h2 className="text-xl mb-4">No Agency Access</h2>
-            <p className="text-slate-400">You don't have access to any agency.</p>
+            <p className="text-slate-400">You don&apos;t have access to any agency.</p>
           </div>
         </div>
       )

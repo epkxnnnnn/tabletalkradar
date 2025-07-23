@@ -572,7 +572,7 @@ export default function PostCreator({ onClose, onPostCreated, editPost }: PostCr
                       <h4 className="text-white font-medium mb-2">{template.name}</h4>
                       <p className="text-slate-400 text-sm mb-3">{template.description}</p>
                       <div className="text-slate-300 text-sm mb-2">
-                        "{template.content_template.substring(0, 100)}..."
+                        &quot;{template.content_template.substring(0, 100)}...&quot;
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="bg-slate-600 text-slate-300 px-2 py-1 rounded text-xs">

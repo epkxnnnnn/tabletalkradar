@@ -294,7 +294,7 @@ export default function ClientOnboarding({ onClientCreated, onClose }: ClientOnb
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-semibold text-white mb-4">Services & Monitoring</h3>
-              <p className="text-slate-400 text-sm mb-6">Select the services you'll be providing for this client.</p>
+              <p className="text-slate-400 text-sm mb-6">Select the services you&apos;ll be providing for this client.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -334,7 +334,7 @@ export default function ClientOnboarding({ onClientCreated, onClose }: ClientOnb
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-semibold text-white mb-4">Client Tier & Pricing</h3>
-              <p className="text-slate-400 text-sm mb-6">Choose the service tier that best fits this client's needs.</p>
+              <p className="text-slate-400 text-sm mb-6">Choose the service tier that best fits this client&apos;s needs.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -425,7 +425,7 @@ export default function ClientOnboarding({ onClientCreated, onClose }: ClientOnb
           </svg>
         </div>
         <h3 className="text-lg font-medium text-white mb-2">No Permission</h3>
-        <p className="text-slate-400">You don't have permission to create clients. Contact your agency administrator.</p>
+        <p className="text-slate-400">You don&apos;t have permission to create clients. Contact your agency administrator.</p>
       </div>
     )
   }

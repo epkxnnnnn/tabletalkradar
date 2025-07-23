@@ -119,7 +119,7 @@ export default function ClientDashboard() {
         <div className="text-center text-white">
           <div className="text-4xl mb-4">🏢</div>
           <h2 className="text-xl font-semibold mb-2">No Dashboard Access</h2>
-          <p className="text-slate-400 mb-4">You don't have access to any client dashboards yet.</p>
+          <p className="text-slate-400 mb-4">You don&apos;t have access to any client dashboards yet.</p>
           <p className="text-slate-400 text-sm">Contact your agency administrator to get access.</p>
         </div>
       </div>

@@ -624,7 +624,7 @@ export default function AgencySettings() {
           </svg>
         </div>
         <h3 className="text-lg font-medium text-white mb-2">No Permission</h3>
-        <p className="text-slate-400">You don't have permission to access agency settings.</p>
+        <p className="text-slate-400">You don&apos;t have permission to access agency settings.</p>
       </div>
     )
   }

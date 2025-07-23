@@ -324,7 +324,7 @@ export default function AgencyCreation({ onAgencyCreated, onCancel }: AgencyCrea
 
               <div className="border-t border-slate-700 pt-4 mt-4">
                 <div className="bg-slate-700 rounded-lg p-4">
-                  <h4 className="text-white font-medium mb-2">What's Next?</h4>
+                  <h4 className="text-white font-medium mb-2">What&apos;s Next?</h4>
                   <ul className="text-sm text-slate-300 space-y-1">
                     <li>• Your agency will be created with owner permissions</li>
                     <li>• You can start adding clients immediately</li>
