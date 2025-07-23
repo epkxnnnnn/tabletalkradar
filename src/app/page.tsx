@@ -205,7 +205,7 @@ export default function HomePage() {
               The Bottom Line
             </h2>
             <p className="text-xl md:text-2xl text-dark-600 mb-8 leading-relaxed">
-              You're losing customers to competitors who are more visible online.
+              You&apos;re losing customers to competitors who are more visible online.
             </p>
             <p className="text-lg md:text-xl text-dark-700 mb-12 leading-relaxed">
               Every day you wait is another day they capture your market share.<br/>

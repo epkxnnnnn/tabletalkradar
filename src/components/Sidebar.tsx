@@ -6,11 +6,11 @@ import { usePathname } from 'next/navigation';
 const navItems = [
   { label: 'Dashboard', icon: '🏠', path: '/dashboard' },
   { label: 'Businesses', icon: '🏢', path: '/dashboard/businesses' },
-  { label: 'Reviews', icon: '⭐', path: '/reviews' },
-  { label: 'Q&A', icon: '❓', path: '/qna' },
-  { label: 'Calendar', icon: '📅', path: '/calendar' },
-  { label: 'Integrations', icon: '🔗', path: '/integrations' },
-  { label: 'Settings', icon: '⚙️', path: '/settings' },
+  { label: 'Reviews', icon: '⭐', path: '/dashboard/reviews' },
+  { label: 'Q&A', icon: '❓', path: '/dashboard/qna' },
+  { label: 'Calendar', icon: '📅', path: '/dashboard/calendar' },
+  { label: 'Integrations', icon: '🔗', path: '/dashboard/integrations' },
+  { label: 'Settings', icon: '⚙️', path: '/dashboard/settings' },
 ];
 
 export default function Sidebar() {
