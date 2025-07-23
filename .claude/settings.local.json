@@ -41,7 +41,8 @@
       "Bash(sudo dscacheutil:*)",
       "Bash(sudo killall:*)",
       "Bash(npm uninstall:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "WebFetch(domain:tabletalk-g6myb5sim-reppro.vercel.app)"
     ],
     "deny": []
   }
