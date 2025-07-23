@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   const access_token = cookieStore.get('sb-access-token')?.value;
   if (!access_token) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   const profile = await getProfile(access_token);
-  if (!profile) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (!profile || !profile.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   if (profile.role === 'superadmin') {
     const { data: clients, error } = await supabaseAdmin().from('clients').select('*').order('created_at', { ascending: false });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
