@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update formatted address if we got a better one
-    if (placeDetails.formatted_address && !location.address?.includes(placeDetails.formatted_address.split(',')[0])) {
+    if (placeDetails.formatted_address && !(location as any).address?.includes(placeDetails.formatted_address.split(',')[0])) {
       updateData.address = placeDetails.formatted_address
     }
 

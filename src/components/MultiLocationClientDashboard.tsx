@@ -244,8 +244,8 @@ export default function MultiLocationClientDashboard() {
             {/* Overview Stats */}
             {selectedLocation && (
               <LocationOverviewStats 
-                location={selectedLocation}
-                clientId={currentClient.id}
+                locationId={selectedLocation.id}
+                className=""
               />
             )}
 
@@ -305,8 +305,8 @@ export default function MultiLocationClientDashboard() {
 
         {activeTab === 'reviews' && canRespondReviews && selectedLocation && (
           <LocationReviewManager 
-            location={selectedLocation}
-            compact={false}
+            locationId={selectedLocation.id}
+            className=""
           />
         )}
 

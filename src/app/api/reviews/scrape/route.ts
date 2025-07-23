@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
         console.error(`Error scraping reviews for location ${location.business_name}:`, error)
         scrapingResults.push({
           location_name: location.business_name,
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
           reviews_found: 0,
           new_reviews: 0
         })

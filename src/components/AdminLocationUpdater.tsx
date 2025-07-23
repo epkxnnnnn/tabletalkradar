@@ -28,7 +28,7 @@ interface Keyword {
   keyword: string
   current_rank?: number
   previous_rank?: number
-  rank_history?: { date: string; rank: number }[]
+  rank_history?: { date: string; rank: number; change?: number }[]
   best_rank?: number
   worst_rank?: number
 }

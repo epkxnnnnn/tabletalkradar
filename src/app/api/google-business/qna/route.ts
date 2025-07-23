@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
       .insert({
         location_id: location_id,
         client_id: location.client_id,
-        agency_id: location.agency_id,
+        agency_id: location.clients?.[0]?.agency_id,
         google_question_id: question_id,
         activity_type: 'answer_posted',
         activity_data: {
