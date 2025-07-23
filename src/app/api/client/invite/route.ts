@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
         id,
         business_name,
         agency_id,
-        agencies!inner(owner_id)
+        agencies(owner_id)
       `)
       .eq('id', client_id)
       .single()
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Client not found' }, { status: 404 })
     }
 
-    if (client.agencies.owner_id !== user.id) {
+    if (client.agencies?.owner_id !== user.id) {
       return NextResponse.json({ error: 'Unauthorized to invite users for this client' }, { status: 403 })
     }
 
