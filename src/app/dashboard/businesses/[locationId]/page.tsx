@@ -45,7 +45,7 @@ export default function LocationDashboardPage() {
     return <div className="text-red-400">Location not found.</div>;
   }
 
-  const canEdit = profile?.role === 'superadmin' || (user && location.owner_id === user.id);
+  const canEdit = profile?.role === 'superadmin' || (!!user && location.owner_id === user.id);
 
   return (
     <div className="max-w-4xl mx-auto py-8">
