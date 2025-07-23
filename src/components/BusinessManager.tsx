@@ -139,8 +139,32 @@ export default function BusinessManager() {
             primaryCategory: { displayName: 'Business' },
             additionalCategories: []
           },
+          regularHours: {
+            periods: [
+              {
+                openDay: 'MONDAY',
+                openTime: '09:00',
+                closeDay: 'MONDAY', 
+                closeTime: '17:00'
+              }
+            ]
+          },
+          labels: [] as string[],
+          localPostAttributes: [] as Array<{
+            attributeId: string
+            values: string[]
+          }>,
+          moreHours: [] as Array<{
+            hoursTypeId: string
+            periods: Array<{
+              openDay: string
+              openTime: string
+              closeDay: string
+              closeTime: string
+            }>
+          }>,
           latlng: { latitude: 40.7128, longitude: -74.0060 }
-        },
+        } as GoogleBusinessProfile,
         google_reviews: [
           {
             name: 'locations/123/reviews/mock_review_1',
@@ -185,7 +209,7 @@ export default function BusinessManager() {
 
       // Update local state
       setBusinesses(prev => prev.map(b => 
-        b.id === businessId ? { ...b, ...mockGoogleData } : b
+        b.id === businessId ? { ...b, ...mockGoogleData } as Business : b
       ))
 
     } catch (error) {
