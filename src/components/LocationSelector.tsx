@@ -3,12 +3,24 @@
 import React from 'react'
 
 interface LocationSelectorProps {
-  onLocationChange: (locationId: string) => void
+  onLocationChange?: (locationId: string) => void
   selectedLocationId?: string
   className?: string
+  locations?: any[]
+  selectedLocation?: any
+  onLocationSelect?: (location: any) => void
+  showStats?: boolean
 }
 
-export default function LocationSelector({ onLocationChange, selectedLocationId, className = '' }: LocationSelectorProps) {
+export default function LocationSelector({ 
+  onLocationChange, 
+  selectedLocationId, 
+  className = '', 
+  locations = [], 
+  selectedLocation, 
+  onLocationSelect, 
+  showStats = false 
+}: LocationSelectorProps) {
   return (
     <div className={`bg-slate-800 rounded-lg p-4 ${className}`}>
       <label className="block text-sm font-medium text-slate-300 mb-2">

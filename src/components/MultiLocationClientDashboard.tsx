@@ -253,15 +253,15 @@ export default function MultiLocationClientDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {canViewSEOData && selectedLocation && (
                 <LocationSEODashboard 
-                  location={selectedLocation}
-                  compact={true}
+                  locationId={selectedLocation.id}
+                  className=""
                 />
               )}
               
               {canRespondReviews && selectedLocation && (
                 <LocationReviewManager 
-                  location={selectedLocation}
-                  compact={true}
+                  locationId={selectedLocation.id}
+                  className=""
                 />
               )}
             </div>
@@ -284,20 +284,22 @@ export default function MultiLocationClientDashboard() {
 
         {activeTab === 'seo' && canViewSEOData && selectedLocation && (
           <LocationSEODashboard 
-            location={selectedLocation}
-            compact={false}
+            locationId={selectedLocation.id}
+            className=""
           />
         )}
 
         {activeTab === 'keywords' && canViewSEOData && selectedLocation && (
           <LocationKeywordTracker 
-            location={selectedLocation}
+            locationId={selectedLocation.id}
+            className=""
           />
         )}
 
         {activeTab === 'social' && canCreatePosts && selectedLocation && (
           <LocationSocialCalendar 
-            location={selectedLocation}
+            locationId={selectedLocation.id}
+            className=""
           />
         )}
 

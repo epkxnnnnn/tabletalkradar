@@ -21,6 +21,7 @@ interface ClientUser {
   last_login?: string
   created_at: string
   user_email?: string
+  client_name?: string
 }
 
 export default function ClientUserInvite() {
@@ -52,7 +53,7 @@ export default function ClientUserInvite() {
       if (error) throw error
       setClients(data || [])
     } catch (error) {
-      console.error('Error loading clients:', error)
+      console.error('Error loading clients:', error instanceof Error ? error.message : error)
     }
   }
 
@@ -88,7 +89,7 @@ export default function ClientUserInvite() {
 
       setClientUsers(clientUsersWithEmails)
     } catch (error) {
-      console.error('Error loading client users:', error)
+      console.error('Error loading client users:', error instanceof Error ? error.message : error)
     }
   }
 
@@ -129,8 +130,8 @@ export default function ClientUserInvite() {
         throw new Error(result.error || 'Invitation failed')
       }
     } catch (error) {
-      console.error('Error inviting user:', error)
-      setMessage(`❌ ${error.message}`)
+      console.error('Error inviting user:', error instanceof Error ? error.message : error)
+      setMessage(`❌ ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setLoading(false)
     }
@@ -148,7 +149,7 @@ export default function ClientUserInvite() {
       setMessage(`✅ User access ${!isActive ? 'enabled' : 'disabled'} successfully`)
       loadClientUsers()
     } catch (error) {
-      console.error('Error updating user access:', error)
+      console.error('Error updating user access:', error instanceof Error ? error.message : error)
       setMessage('❌ Failed to update user access')
     }
   }

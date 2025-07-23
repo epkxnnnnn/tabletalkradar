@@ -19,6 +19,8 @@ interface Location {
   google_listing_completeness: number
   seo_data_last_updated?: string
   gbp_data_last_updated?: string
+  client_id: string
+  agency_id: string
 }
 
 interface Keyword {
@@ -26,6 +28,9 @@ interface Keyword {
   keyword: string
   current_rank?: number
   previous_rank?: number
+  rank_history?: { date: string; rank: number }[]
+  best_rank?: number
+  worst_rank?: number
 }
 
 export default function AdminLocationUpdater() {
