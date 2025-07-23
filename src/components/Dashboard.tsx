@@ -13,6 +13,11 @@ import ReportGenerator from './ReportGenerator'
 import Settings from './Settings'
 import Integrations from './Integrations'
 import TeamManagement from './TeamManagement'
+import AdminLocationUpdater from './AdminLocationUpdater'
+import GoogleReviewScraper from './GoogleReviewScraper'
+import GoogleBusinessManager from './GoogleBusinessManager'
+import ClientDataImporter from './ClientDataImporter'
+import SecurityAudit from './SecurityAudit'
 import { ToastContainer, useToast } from './Toast'
 import Image from 'next/image'
 
@@ -322,9 +327,34 @@ export default function Dashboard() {
           <div>
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-white">Admin Panel</h2>
-              <p className="text-slate-400">System administration and user management</p>
+              <p className="text-slate-400">System administration and data management</p>
             </div>
-            <div className="bg-slate-800 p-6 rounded-lg">
+            
+            {/* Security Audit */}
+            <SecurityAudit issues={[
+              {
+                name: 'rls_disabled_in_public',
+                title: 'RLS Disabled in Public',
+                level: 'ERROR' as const,
+                description: 'Row Level Security not enabled on public tables',
+                detail: 'Multiple tables missing RLS protection',
+                metadata: { name: 'agencies', type: 'table', schema: 'public' }
+              }
+            ]} />
+            
+            {/* Client Data Importer */}
+            <ClientDataImporter />
+            
+            {/* Location Data Updater */}
+            <AdminLocationUpdater />
+            
+            {/* Google Review Scraper */}
+            <GoogleReviewScraper />
+            
+            {/* Google Business Manager */}
+            <GoogleBusinessManager />
+            
+            <div className="bg-slate-800 p-6 rounded-lg mt-6">
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-4">System Overview</h3>

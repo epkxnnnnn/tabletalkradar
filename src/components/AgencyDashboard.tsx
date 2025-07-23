@@ -14,6 +14,10 @@ import AdvancedAnalytics from './AdvancedAnalytics'
 import PredictiveAnalytics from './PredictiveAnalytics'
 import TaskAutomation from './TaskAutomation'
 import QuickActions from './QuickActions'
+import AIAnalysisPanel from './AIAnalysisPanel'
+import ReviewResponder from './ReviewResponder'
+import ManualPostHelper from './ManualPostHelper'
+import ClientUserInvite from './ClientUserInvite'
 import { 
   EnhancedClient, 
   ClientPerformanceMetrics,
@@ -298,6 +302,10 @@ export default function AgencyDashboard() {
             {[
               { id: 'overview', name: 'Overview', icon: '📊', show: true },
               { id: 'clients', name: 'Clients', icon: '👥', show: permissions?.can_create_clients || permissions?.can_edit_clients || permissions?.can_view_all_audits },
+              { id: 'reviews', name: 'Reviews', icon: '💬', show: permissions?.can_create_clients || permissions?.can_edit_clients },
+              { id: 'social', name: 'Social Media', icon: '📱', show: permissions?.can_create_clients || permissions?.can_edit_clients },
+              { id: 'client-access', name: 'Client Access', icon: '🔑', show: permissions?.can_create_clients || permissions?.can_edit_clients },
+              { id: 'ai-analysis', name: 'AI Analysis', icon: '🤖', show: permissions?.can_access_ai_insights },
               { id: 'intelligence', name: 'Intelligence', icon: '🧠', show: permissions?.can_access_ai_insights },
               { id: 'predictive', name: 'Predictive', icon: '🔮', show: permissions?.can_access_ai_insights },
               { id: 'tasks', name: 'Tasks', icon: '📋', show: permissions?.can_manage_automations },
@@ -479,68 +487,185 @@ export default function AgencyDashboard() {
         )}
 
         {activeTab === 'clients' && (permissions?.can_create_clients || permissions?.can_edit_clients || permissions?.can_view_all_audits) && (
-          <div className="bg-slate-800 rounded-lg p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-white">Client Management</h2>
-              {permissions?.can_create_clients && (
-                <button 
-                  onClick={() => setShowClientOnboarding(true)}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Add New Client
-                </button>
-              )}
+          <div className="space-y-6">
+            {/* Client Management Header */}
+            <div className="bg-slate-800 rounded-lg p-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-white">Client Management</h2>
+                  <p className="text-slate-400 text-sm mt-1">Manage your client portfolio and run AI analysis</p>
+                </div>
+                {permissions?.can_create_clients && (
+                  <button 
+                    onClick={() => setShowClientOnboarding(true)}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    Add New Client
+                  </button>
+                )}
+              </div>
+              
+              {/* Search and Filter Bar */}
+              <div className="mb-6">
+                <div className="flex space-x-4">
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      placeholder="Search clients by name, industry, location..."
+                      className="w-full bg-slate-700 text-white px-4 py-2 rounded-lg border border-slate-600 focus:border-red-500 focus:outline-none"
+                    />
+                  </div>
+                  <select className="bg-slate-700 text-white px-4 py-2 rounded-lg border border-slate-600 focus:border-red-500 focus:outline-none">
+                    <option value="">All Industries</option>
+                    <option value="food_beverage">Food & Beverage</option>
+                    <option value="health_wellness">Health & Wellness</option>
+                    <option value="professional_services">Professional Services</option>
+                  </select>
+                  <select className="bg-slate-700 text-white px-4 py-2 rounded-lg border border-slate-600 focus:border-red-500 focus:outline-none">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="prospect">Prospect</option>
+                  </select>
+                </div>
+              </div>
             </div>
-            
+
             {topClients.length > 0 ? (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {topClients.map(client => (
-                  <div key={client.id} className="bg-slate-700 rounded-lg p-4 flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium text-white">{client.business_name}</h3>
-                      <p className="text-slate-400 text-sm">{client.industry} • {client.location || 'Location not set'}</p>
-                      <div className="flex items-center space-x-4 mt-2 text-sm">
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          client.status === 'active' ? 'bg-green-900/20 text-green-400' :
-                          client.status === 'inactive' ? 'bg-yellow-900/20 text-yellow-400' :
-                          'bg-red-900/20 text-red-400'
+                  <div key={client.id} className="bg-slate-800 rounded-lg p-6 hover:bg-slate-750 transition-colors">
+                    {/* Client Header */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-white">{client.business_name}</h3>
+                        <p className="text-slate-400 text-sm">{client.industry} • {client.location || 'Location not set'}</p>
+                        <div className="flex items-center space-x-2 mt-2">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            client.status === 'active' ? 'bg-green-900/20 text-green-400' :
+                            client.status === 'inactive' ? 'bg-yellow-900/20 text-yellow-400' :
+                            'bg-red-900/20 text-red-400'
+                          }`}>
+                            {client.status}
+                          </span>
+                          <span className="text-slate-500 text-xs">Tier: {(client as any).service_tier || 'standard'}</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`text-2xl font-bold ${
+                          (client as any).last_score >= 80 ? 'text-green-400' :
+                          (client as any).last_score >= 60 ? 'text-yellow-400' :
+                          'text-red-400'
                         }`}>
-                          {client.status}
-                        </span>
-                        <span className="text-slate-400">Tier: {client.client_tier}</span>
+                          {(client as any).last_score || 'N/A'}
+                        </div>
+                        <p className="text-slate-400 text-xs">
+                          {(client as any).last_audit_at ? formatTimeAgo((client as any).last_audit_at) : 'No audit'}
+                        </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className={`text-lg font-bold ${
-                        (client as any).last_score >= 80 ? 'text-green-400' :
-                        (client as any).last_score >= 60 ? 'text-yellow-400' :
-                        'text-red-400'
-                      }`}>
-                        {(client as any).last_score || 'N/A'}
+
+                    {/* Client Details */}
+                    <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+                      <div>
+                        <p className="text-slate-400">Health Score</p>
+                        <p className="text-white font-medium">{(client as any).health_score || 'N/A'}/100</p>
                       </div>
-                      <p className="text-slate-400 text-sm">
-                        {(client as any).last_audit_at ? formatTimeAgo((client as any).last_audit_at) : 'No audit'}
-                      </p>
+                      <div>
+                        <p className="text-slate-400">Next Audit</p>
+                        <p className="text-white font-medium">
+                          {(client as any).next_audit_due ? new Date((client as any).next_audit_due).toLocaleDateString() : 'Not scheduled'}
+                        </p>
+                      </div>
                     </div>
+
+                    {/* Quick Actions */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <button 
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm font-medium transition-colors"
+                        onClick={() => {
+                          // Navigate to audit for this client
+                          setActiveTab('overview')
+                        }}
+                      >
+                        🔍 Run Audit
+                      </button>
+                      <button 
+                        className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded text-sm font-medium transition-colors"
+                        onClick={async () => {
+                          try {
+                            const response = await fetch('/api/tasks/analyze', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                agency_id: currentAgency?.id,
+                                client_id: client.id,
+                                analysis_type: 'comprehensive',
+                                timeframe: '7_days',
+                                include_automation: true,
+                                industry: client.industry,
+                                business_name: client.business_name,
+                                location: (client as any).location
+                              })
+                            })
+                            const result = await response.json()
+                            if (result.success) {
+                              alert(`Generated ${result.taskCount} AI tasks for ${client.business_name}`)
+                              loadDashboardData() // Refresh data
+                            }
+                          } catch (error) {
+                            console.error('Error generating AI tasks:', error)
+                          }
+                        }}
+                      >
+                        🤖 AI Tasks
+                      </button>
+                    </div>
+
+                    {/* Client Insights */}
+                    {(client as any).unique_selling_proposition && (
+                      <div className="mt-4 p-3 bg-slate-700 rounded-lg">
+                        <p className="text-slate-300 text-xs font-medium mb-1">Business Focus</p>
+                        <p className="text-slate-400 text-sm">{(client as any).unique_selling_proposition}</p>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center text-slate-400 py-12">
-                <div className="text-4xl mb-4">👥</div>
-                <h3 className="text-lg font-medium mb-2">No Clients Yet</h3>
-                <p className="mb-4">Get started by adding your first client to the agency.</p>
-                {permissions?.can_create_clients && (
-                  <button 
-                    onClick={() => setShowClientOnboarding(true)}
-                    className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-                  >
-                    Add Your First Client
-                  </button>
-                )}
+              <div className="bg-slate-800 rounded-lg">
+                <div className="text-center text-slate-400 py-12">
+                  <div className="text-4xl mb-4">👥</div>
+                  <h3 className="text-lg font-medium mb-2">No Clients Yet</h3>
+                  <p className="mb-4">Get started by adding your first client to the agency.</p>
+                  {permissions?.can_create_clients && (
+                    <button 
+                      onClick={() => setShowClientOnboarding(true)}
+                      className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                    >
+                      Add Your First Client
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>
+        )}
+
+        {activeTab === 'reviews' && (permissions?.can_create_clients || permissions?.can_edit_clients) && (
+          <ReviewResponder />
+        )}
+
+        {activeTab === 'social' && (permissions?.can_create_clients || permissions?.can_edit_clients) && (
+          <ManualPostHelper />
+        )}
+
+        {activeTab === 'client-access' && (permissions?.can_create_clients || permissions?.can_edit_clients) && (
+          <ClientUserInvite />
+        )}
+
+        {activeTab === 'ai-analysis' && permissions?.can_access_ai_insights && (
+          <AIAnalysisPanel />
         )}
 
         {activeTab === 'intelligence' && permissions?.can_access_ai_insights && (
