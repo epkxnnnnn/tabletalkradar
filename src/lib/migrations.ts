@@ -241,7 +241,7 @@ class MigrationManager {
         throw error
       }
 
-      return data?.version || 0
+      return (data as any)?.version || 0
     } catch (error) {
       // If schema_migrations table doesn't exist, create it
       await this.createMigrationsTable()
