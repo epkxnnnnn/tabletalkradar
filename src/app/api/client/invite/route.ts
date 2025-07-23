@@ -26,8 +26,7 @@ export async function POST(request: NextRequest) {
       .select(`
         id,
         business_name,
-        agency_id,
-        agencies(owner_id)
+        agency_id
       `)
       .eq('id', client_id)
       .single()
@@ -36,7 +35,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Client not found' }, { status: 404 })
     }
 
-    if (client.agencies?.owner_id !== user.id) {
+    // Verify the agency belongs to the user
+    const { data: agency, error: agencyError } = await supabase
+      .from('agencies')
+      .select('owner_id')
+      .eq('id', client.agency_id)
+      .single()
+
+    if (agencyError || !agency || agency.owner_id !== user.id) {
       return NextResponse.json({ error: 'Unauthorized to invite users for this client' }, { status: 403 })
     }
 
