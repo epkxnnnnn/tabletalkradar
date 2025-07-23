@@ -3,6 +3,23 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { logger } from '@/lib/logger'
 
+async function createSupabaseClient() {
+  const { createServerClient } = await import('@supabase/ssr');
+  const { cookies } = await import('next/headers');
+  const cookieStore = await cookies();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+      },
+    }
+  );
+}
+
 async function getUserRole(supabase: any, userId: string) {
   const { data: profile } = await supabase
     .from('profiles')
