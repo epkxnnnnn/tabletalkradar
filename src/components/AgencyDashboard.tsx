@@ -244,9 +244,9 @@ export default function AgencyDashboard() {
       {/* Header */}
       <header className="bg-slate-800 border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             <div className="flex items-center space-x-4">
-              <Image src="/logo.png" alt="TableTalk Radar" width={150} height={40} className="h-10 w-auto" />
+              <Image src="/tabletalk-radar-logo.png" alt="TableTalk Radar" width={200} height={60} className="h-14 w-auto" />
               
               {/* Agency Selector */}
               <div className="flex items-center space-x-2">

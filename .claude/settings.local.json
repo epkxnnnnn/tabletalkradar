@@ -33,7 +33,13 @@
       "Bash(find:*)",
       "Bash(touch:*)",
       "Bash(ls:*)",
-      "Bash(git cherry-pick:*)"
+      "Bash(git cherry-pick:*)",
+      "Bash(ping:*)",
+      "Bash(pkill:*)",
+      "Bash(nslookup:*)",
+      "Bash(dig:*)",
+      "Bash(sudo dscacheutil:*)",
+      "Bash(sudo killall:*)"
     ],
     "deny": []
   }

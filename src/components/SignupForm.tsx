@@ -179,7 +179,7 @@ export default function SignupForm() {
       <div className="max-w-md w-full space-y-8 p-8">
         <div>
           <div className="flex justify-center mb-6">
-            <Image src="/logo.png" alt="TableTalk Radar" width={200} height={50} className="h-12 w-auto" />
+            <Image src="/tabletalk-radar-logo.png" alt="TableTalk Radar" width={250} height={75} className="h-16 w-auto" />
           </div>
           <h2 className="text-center text-3xl font-extrabold text-white">
             {invitationData ? 'Join Your Team' : 'Create your account'}
