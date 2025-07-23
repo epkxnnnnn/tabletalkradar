@@ -153,7 +153,7 @@ export default function AgencyCreation({ onAgencyCreated, onCancel }: AgencyCrea
           <div className="space-y-6">
             <div>
               <h3 className="text-2xl font-bold text-white mb-2">Create Your Agency</h3>
-              <p className="text-slate-400 mb-6">Let's get your agency set up to manage multiple clients with AI-powered insights.</p>
+              <p className="text-slate-400 mb-6">Let&apos;s get your agency set up to manage multiple clients with AI-powered insights.</p>
             </div>
 
             <div className="space-y-4">
@@ -235,7 +235,7 @@ export default function AgencyCreation({ onAgencyCreated, onCancel }: AgencyCrea
           <div className="space-y-6">
             <div>
               <h3 className="text-2xl font-bold text-white mb-2">Choose Your Plan</h3>
-              <p className="text-slate-400 mb-6">Select the plan that best fits your agency's needs. You can upgrade anytime.</p>
+              <p className="text-slate-400 mb-6">Select the plan that best fits your agency&apos;s needs. You can upgrade anytime.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
 
 function getTimeframeStartDate(timeframe: string): string {
   const now = new Date()
-  let startDate = new Date()
+  const startDate = new Date()
   
   switch (timeframe) {
     case '7d':

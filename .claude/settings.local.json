@@ -32,7 +32,8 @@
       "Bash(NEXT_PUBLIC_SUPABASE_URL=https://pwscfkrouagstuyakfjj.supabase.co SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3c2Nma3JvdWFnc3R1eWFrZmpqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTYyOTU4NSwiZXhwIjoyMDY3MjA1NTg1fQ.gY6OXWKkBi1_C4mY-R4PY8fhxMqmR551pGli-xpJmGQ node -e \"\nconst { createClient } = require(''@supabase/supabase-js'');\nconst supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);\nsupabase.from(''clients'').select(''id, business_name, location, created_at'').order(''created_at'').then(({data}) => {\n  console.log(''📋 All clients with creation dates:'');\n  const groups = {};\n  data.forEach((client, i) => {\n    const key = client.business_name + '' - '' + client.location;\n    if (!groups[key]) groups[key] = [];\n    groups[key].push({...client, index: i+1});\n  });\n  \n  Object.keys(groups).forEach(key => {\n    const clients = groups[key];\n    if (clients.length > 1) {\n      console.log(\\`\\n🔴 DUPLICATE: ${key} (${clients.length} entries)\\`);\n      clients.forEach(c => console.log(\\`   - ID: ${c.id} | Created: ${c.created_at}\\`));\n    } else {\n      console.log(\\`\\n✅ ${key}\\`);\n    }\n  });\n});\n\")",
       "Bash(NEXT_PUBLIC_SUPABASE_URL=https://pwscfkrouagstuyakfjj.supabase.co SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB3c2Nma3JvdWFnc3R1eWFrZmpqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTYyOTU4NSwiZXhwIjoyMDY3MjA1NTg1fQ.gY6OXWKkBi1_C4mY-R4PY8fhxMqmR551pGli-xpJmGQ node check_duplicates.js)",
       "WebFetch(domain:developers.google.com)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(touch:*)"
     ],
     "deny": []
   }
