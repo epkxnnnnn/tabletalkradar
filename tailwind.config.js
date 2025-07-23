@@ -8,15 +8,29 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // TableTalk Radar Dark Red Brand Colors
+        // TableTalk Radar Ultra-Dark SaaS Theme
         brand: {
           'primary': '#8B0000',      // Dark Red
           'light': '#DC143C',        // Light Red
           'deep': '#660000',         // Deep Red
           'accent': '#FF6B6B',       // Accent Red
           'error': '#FF0000',        // Error Red
+          'gradient': 'linear-gradient(135deg, #8B0000 0%, #DC143C 100%)',
         },
-        // Dark theme colors
+        // Ultra-dark theme colors
+        dark: {
+          50: '#0a0a0a',            // Almost black
+          100: '#121212',           // True dark background
+          200: '#1a1a1a',           // Card backgrounds
+          300: '#262626',           // Borders and dividers
+          400: '#404040',           // Disabled text
+          500: '#525252',           // Secondary text
+          600: '#737373',           // Primary text light
+          700: '#a3a3a3',           // Very light text
+          800: '#d4d4d4',           // Near white
+          900: '#f5f5f5',           // Pure white
+        },
+        // Enhanced slate for depth
         slate: {
           50: '#f8fafc',
           100: '#f1f5f9',
@@ -27,17 +41,20 @@ module.exports = {
           600: '#475569',
           700: '#334155',
           800: '#1e293b',
-          900: '#0f172a',
+          850: '#1a202c',           // Extra dark
+          900: '#0f1419',           // Ultra dark
+          950: '#020617',           // Nearly black
         },
-        // Supporting colors
-        gray: {
-          'primary': '#2D3748',      // Primary text
-          'secondary': '#4A5568',    // Secondary text
-          'light': '#F7FAFC',        // Background
+        // Modern glass effect colors
+        glass: {
+          'bg': 'rgba(18, 18, 18, 0.8)',
+          'border': 'rgba(255, 255, 255, 0.1)',
+          'hover': 'rgba(255, 255, 255, 0.05)',
         },
-        success: '#38A169',          // Success indicators
-        warning: '#F6AD55',          // Warning states
-        info: '#3182CE',             // Information and links
+        success: '#10b981',          // Modern green
+        warning: '#f59e0b',          // Modern amber
+        info: '#3b82f6',             // Modern blue
+        purple: '#8b5cf6',           // Modern purple accent
       },
       fontFamily: {
         'inter': ['Inter', 'sans-serif'],
