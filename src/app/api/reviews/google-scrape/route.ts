@@ -8,6 +8,28 @@ const supabase = createClient(
 
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY
 
+interface ClientLocation {
+  id: string
+  business_name: string
+  location_name?: string
+  city: string
+  state: string
+  client_id: string
+  agency_id: string
+  google_place_id?: string
+  google_rating?: number
+  google_review_count?: number
+  google_listing_completeness?: number
+  gbp_data_last_updated?: string
+  address?: string
+  phone?: string
+  website?: string
+  clients?: {
+    business_name: string
+    agency_id: string
+  }[]
+}
+
 interface GooglePlaceDetails {
   place_id: string
   name: string
@@ -52,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get location details from database
-    const { data: location, error: locationError } = await supabase
+    const { data: location, error: locationError }: { data: ClientLocation | null, error: any } = await supabase
       .from('client_locations')
       .select(`
         *,
@@ -158,17 +180,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Update formatted address if we got a better one
-    if (placeDetails.formatted_address && !(location as any).address?.includes(placeDetails.formatted_address.split(',')[0])) {
+    if (placeDetails.formatted_address && !location.address?.includes(placeDetails.formatted_address.split(',')[0])) {
       updateData.address = placeDetails.formatted_address
     }
 
     // Update phone if we got one
-    if (placeDetails.formatted_phone_number && !(location as any).phone) {
+    if (placeDetails.formatted_phone_number && !location.phone) {
       updateData.phone = placeDetails.formatted_phone_number
     }
 
     // Update website if we got one
-    if (placeDetails.website && !(location as any).website) {
+    if (placeDetails.website && !location.website) {
       updateData.website = placeDetails.website
     }
 
