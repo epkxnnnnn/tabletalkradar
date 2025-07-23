@@ -181,7 +181,7 @@ export function MultiLocationClientProvider({ children }: { children: React.Reac
             business_name: cu.clients.business_name,
             industry: cu.clients.industry,
             status: cu.clients.status,
-            agency_id: cu.clients.agency_id,
+            agency_id: cu.clients?.[0]?.agency_id,
             agency_name: cu.clients.agencies?.name || 'Unknown Agency',
             total_locations: locationCount || 0
           }

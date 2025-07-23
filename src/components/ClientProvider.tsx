@@ -101,7 +101,7 @@ export function ClientProvider({ children }: { children: React.ReactNode }) {
         location: cu.clients.location,
         website: cu.clients.website,
         status: cu.clients.status,
-        agency_id: cu.clients.agency_id,
+        agency_id: cu.clients?.[0]?.agency_id,
         agency_name: cu.clients.agencies?.name || 'Unknown Agency'
       }))
 

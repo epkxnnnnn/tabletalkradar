@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         review_id: review_id,
         location_id: review.location_id,
         client_id: review.client_id,
-        agency_id: review.client_locations.clients.agency_id,
+        agency_id: review.client_locations.clients?.[0]?.agency_id,
         activity_type: 'reply_posted',
         activity_data: {
           reply_text: reply_text,
@@ -204,7 +204,7 @@ export async function DELETE(request: NextRequest) {
         review_id: reviewId,
         location_id: review.location_id,
         client_id: review.client_id,
-        agency_id: review.client_locations.clients.agency_id,
+        agency_id: review.client_locations.clients?.[0]?.agency_id,
         activity_type: 'reply_deleted',
         created_at: new Date().toISOString()
       })

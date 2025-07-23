@@ -30,6 +30,18 @@ interface ClientLocation {
   }[]
 }
 
+interface LocationUpdateData {
+  google_place_id: string
+  google_rating: number
+  google_review_count: number
+  business_description: string
+  google_listing_completeness: number
+  gbp_data_last_updated: string
+  address?: string
+  phone?: string
+  website?: string
+}
+
 interface GooglePlaceDetails {
   place_id: string
   name: string
@@ -141,7 +153,7 @@ export async function POST(request: NextRequest) {
           .insert({
             location_id: location_id,
             client_id: location.client_id,
-            agency_id: location.clients.agency_id,
+            agency_id: location.clients?.[0]?.agency_id,
             platform: 'google',
             external_review_id: `google_${placeId}_${review.time}`,
             reviewer_name: review.author_name,
@@ -170,7 +182,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 4: Update location with Google Business Profile data
-    const updateData = {
+    const updateData: LocationUpdateData = {
       google_place_id: placeId,
       google_rating: placeDetails.rating,
       google_review_count: placeDetails.user_ratings_total,
