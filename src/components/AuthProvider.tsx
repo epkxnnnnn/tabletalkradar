@@ -64,23 +64,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (user) {
-      supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-        .then(({ data, error }) => {
+      const fetchProfile = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single()
+          
           if (error) {
             console.error('Profile loading error:', error)
             setProfile(null)
           } else {
             setProfile(data)
           }
-        })
-        .catch((error) => {
+        } catch (error) {
           console.error('Profile fetch error:', error)
           setProfile(null)
-        })
+        }
+      }
+      
+      fetchProfile()
     } else {
       setProfile(null)
     }
