@@ -50,27 +50,47 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Store tokens in integrations table
-  const { error: integrationError } = await supabase
-    .from('integrations')
-    .upsert({
-      user_id: user.id,
-      platform: 'google_my_business',
-      account_name: user.email, // For now, store email; add a tokens column for refresh_token in production
-      account_id: user.id,
-      is_connected: true,
-      last_sync: new Date().toISOString(),
-      permissions: ['read', 'write']
-    }, { onConflict: 'user_id,platform' });
+  // Get user's Google account info
+  const profileRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+    headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
+  });
+  const profileData = await profileRes.json();
 
-  if (integrationError) {
-    return NextResponse.json({ error: 'Failed to store integration', details: integrationError }, { status: 500 });
+  // Get the client_id from query params or session storage
+  const { searchParams: urlParams } = new URL(request.url);
+  const clientId = urlParams.get('client_id') || state; // Use state to pass client_id
+
+  if (!clientId) {
+    return NextResponse.json({ 
+      error: 'Missing client_id. Please specify which client to connect Google account to.',
+      redirect: '/dashboard?tab=gmb&error=missing_client_id'
+    }, { status: 400 });
   }
 
-  return NextResponse.json({
-    tokens: tokenData,
-    state,
-    user_id: user.id,
-    message: 'Google My Business tokens stored successfully.'
-  });
+  // Update the specific client with Google credentials
+  const { error: clientUpdateError } = await supabase
+    .from('clients')
+    .update({
+      google_client_id: GOOGLE_CLIENT_ID,
+      google_client_secret: GOOGLE_CLIENT_SECRET,
+      google_refresh_token: tokenData.refresh_token,
+      google_access_token: tokenData.access_token,
+      google_account_id: profileData.id,
+      google_token_expires_at: new Date(Date.now() + (tokenData.expires_in * 1000)).toISOString(),
+      google_connected_at: new Date().toISOString(),
+      google_business_verified: true,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', clientId)
+    .eq('user_id', user.id); // Ensure user owns this client
+
+  if (clientUpdateError) {
+    return NextResponse.json({ 
+      error: 'Failed to update client with Google credentials', 
+      details: clientUpdateError 
+    }, { status: 500 });
+  }
+
+  // Redirect back to dashboard with success message
+  return NextResponse.redirect(new URL('/dashboard?tab=gmb&success=google_connected', request.url));
 } 

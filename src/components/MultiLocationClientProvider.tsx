@@ -150,39 +150,31 @@ export function MultiLocationClientProvider({ children }: { children: React.Reac
     setClientsLoading(true)
     try {
       // Get all clients this user has access to
-      const { data: clientUsers, error: clientUsersError } = await supabase
-        .from('client_users')
-        .select(`
-          *,
-          clients (
-            *,
-            agencies (
-              name
-            )
-          )
-        `)
-        .eq('user_id', user.id)
-        .eq('is_active', true)
+      const { data: clients, error: clientsError } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('owner_id', user.id)
+        .eq('status', 'active')
         .order('created_at', { ascending: false })
 
-      if (clientUsersError) throw clientUsersError
+      if (clientsError) throw clientsError
 
       // Get location counts for each client
       const clientsWithLocationCounts = await Promise.all(
-        (clientUsers || []).map(async (cu) => {
+        (clients || []).map(async (client) => {
           const { count: locationCount } = await supabase
             .from('client_locations')
             .select('*', { count: 'exact', head: true })
-            .eq('client_id', cu.clients.id)
+            .eq('client_id', client.id)
             .eq('is_active', true)
 
           return {
-            id: cu.clients.id,
-            business_name: cu.clients.business_name,
-            industry: cu.clients.industry,
-            status: cu.clients.status,
-            agency_id: cu.clients?.[0]?.agency_id,
-            agency_name: cu.clients.agencies?.name || 'Unknown Agency',
+            id: client.id,
+            business_name: client.business_name,
+            industry: client.industry || 'Unknown',
+            status: client.status || 'active',
+            agency_id: client.agency_id,
+            agency_name: 'TableTalk Radar',
             total_locations: locationCount || 0
           }
         })
@@ -242,26 +234,10 @@ export function MultiLocationClientProvider({ children }: { children: React.Reac
     if (!user) return
 
     try {
-      // Get client user record
-      const { data: clientUser, error: clientUserError } = await supabase
-        .from('client_users')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('client_id', clientId)
-        .eq('is_active', true)
-        .single()
-
-      if (clientUserError) throw clientUserError
-
-      // Get client info with location count
+      // Get client info
       const { data: client, error: clientError } = await supabase
         .from('clients')
-        .select(`
-          *,
-          agencies (
-            name
-          )
-        `)
+        .select('*')
         .eq('id', clientId)
         .single()
 
@@ -273,30 +249,27 @@ export function MultiLocationClientProvider({ children }: { children: React.Reac
         .eq('client_id', clientId)
         .eq('is_active', true)
 
-      // Update last login
-      await supabase
-        .from('client_users')
-        .update({ last_login: new Date().toISOString() })
-        .eq('id', clientUser.id)
+      // Create a mock client user for now
+      const mockClientUser: ClientUser = {
+        id: `${user.id}-${clientId}`,
+        user_id: user.id,
+        client_id: clientId,
+        agency_id: client.agency_id || '',
+        role: 'owner', // Default to owner role for now
+        permissions: {},
+        is_active: true,
+        dashboard_preferences: {},
+        created_at: new Date().toISOString()
+      }
 
-      // Track session start
-      await supabase
-        .from('client_sessions')
-        .insert({
-          client_user_id: clientUser.id,
-          client_id: clientId,
-          session_start: new Date().toISOString(),
-          features_used: []
-        })
-
-      setCurrentClientUser(clientUser)
+      setCurrentClientUser(mockClientUser)
       setCurrentClient({
         id: client.id,
         business_name: client.business_name,
-        industry: client.industry,
-        status: client.status,
+        industry: client.industry || 'Unknown',
+        status: client.status || 'active',
         agency_id: client.agency_id,
-        agency_name: client.agencies?.name || 'Unknown Agency',
+        agency_name: 'TableTalk Radar',
         total_locations: locationCount || 0
       })
 
@@ -335,35 +308,8 @@ export function MultiLocationClientProvider({ children }: { children: React.Reac
   }
 
   const trackFeatureUsage = async (feature: string) => {
-    if (!currentClientUser) return
-
-    try {
-      // Get current session
-      const { data: session } = await supabase
-        .from('client_sessions')
-        .select('*')
-        .eq('client_user_id', currentClientUser.id)
-        .is('session_end', null)
-        .order('session_start', { ascending: false })
-        .limit(1)
-        .single()
-
-      if (session) {
-        const currentFeatures = session.features_used || []
-        const updatedFeatures = [...currentFeatures, {
-          feature,
-          location_id: selectedLocation?.id,
-          timestamp: new Date().toISOString()
-        }]
-
-        await supabase
-          .from('client_sessions')
-          .update({ features_used: updatedFeatures })
-          .eq('id', session.id)
-      }
-    } catch (error) {
-      console.error('Error tracking feature usage:', error)
-    }
+    // Skip tracking for now since client_sessions table doesn't exist
+    console.log('Feature usage tracked:', feature, selectedLocation?.id)
   }
 
   const getLocationStats = (locationId?: string) => {

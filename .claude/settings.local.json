@@ -40,7 +40,8 @@
       "Bash(dig:*)",
       "Bash(sudo dscacheutil:*)",
       "Bash(sudo killall:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(true)"
     ],
     "deny": []
   }

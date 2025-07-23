@@ -6,9 +6,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// Note: This requires OAuth 2.0 authentication, not just API key
-const GOOGLE_ACCESS_TOKEN = process.env.GOOGLE_BUSINESS_ACCESS_TOKEN
-
 interface GoogleMyBusinessPost {
   type: 'EVENT' | 'OFFER' | 'CALL_TO_ACTION'
   summary: string
@@ -39,25 +36,24 @@ interface GoogleMyBusinessPost {
 
 export async function POST(request: NextRequest) {
   try {
-    if (!GOOGLE_ACCESS_TOKEN) {
-      return NextResponse.json({ 
-        error: 'Google Business Profile API requires OAuth 2.0 setup',
-        setup_required: true 
-      }, { status: 400 })
-    }
-
     const { location_id, post_data } = await request.json()
 
     if (!location_id || !post_data) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Get location details including Google Place ID
+    // Get location and client details
     const { data: location, error: locationError } = await supabase
       .from('client_locations')
       .select(`
         *,
-        clients!inner(business_name, agency_id)
+        clients!inner(
+          business_name, 
+          agency_id,
+          google_refresh_token,
+          google_client_id,
+          google_client_secret
+        )
       `)
       .eq('id', location_id)
       .single()
@@ -68,33 +64,39 @@ export async function POST(request: NextRequest) {
       }, { status: 404 })
     }
 
+    const client = location.clients[0]
+    if (!client.google_refresh_token) {
+      return NextResponse.json({ 
+        error: 'Google Business Profile API requires OAuth 2.0 setup',
+        setup_required: true 
+      }, { status: 400 })
+    }
+
     // Prepare the post payload
     const postPayload = {
-      languageCode: 'en',
       summary: post_data.summary,
       ...formatPostData(post_data)
     }
 
-    // Create post via Google My Business API
-    const response = await fetch(
-      `https://mybusiness.googleapis.com/v4/accounts/${location.google_account_id}/locations/${location.google_place_id}/localPosts`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${GOOGLE_ACCESS_TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(postPayload)
+    // Create post via Supabase Edge Function
+    const { data, error } = await supabase.functions.invoke('gmb-schedule', {
+      body: {
+        refresh_token: client.google_refresh_token,
+        account_id: location.google_account_id,
+        client_id: client.google_client_id,
+        client_secret: client.google_client_secret,
+        location_id: location.google_place_id,
+        update_type: 'post',
+        update_data: postPayload,
+        scheduled_time: null // immediate posting
       }
-    )
+    })
 
-    const data = await response.json()
-
-    if (!response.ok) {
+    if (error) {
       return NextResponse.json({ 
         error: 'Failed to create Google My Business post',
-        details: data.error?.message || 'Unknown error'
-      }, { status: response.status })
+        details: error.message || 'Unknown error'
+      }, { status: 400 })
     }
 
     // Store post record in database
@@ -103,12 +105,12 @@ export async function POST(request: NextRequest) {
       .insert({
         location_id: location_id,
         client_id: location.client_id,
-        agency_id: location.clients?.[0]?.agency_id,
-        google_post_id: data.name,
+        agency_id: client.agency_id,
+        google_post_id: data.result?.name || `post_${Date.now()}`,
         post_type: post_data.type,
         summary: post_data.summary,
         post_data: postPayload,
-        google_response: data,
+        google_response: data.result,
         status: 'published',
         published_at: new Date().toISOString()
       })
@@ -121,7 +123,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      post: data,
+      post: data.result,
       database_record: savedPost
     })
 

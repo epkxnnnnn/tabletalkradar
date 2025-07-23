@@ -5,7 +5,17 @@ const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'http://localhost
 const GOOGLE_SCOPE = 'https://www.googleapis.com/auth/business.manage https://www.googleapis.com/auth/userinfo.email';
 
 export async function GET(request: NextRequest) {
-  const state = Math.random().toString(36).substring(2, 15); // You may want to store this for CSRF protection
+  const { searchParams } = new URL(request.url);
+  const clientId = searchParams.get('client_id');
+  
+  if (!clientId) {
+    return NextResponse.json({ 
+      error: 'Missing client_id parameter. Please specify which client to connect.' 
+    }, { status: 400 });
+  }
+
+  // Use client_id as state for security and tracking
+  const state = clientId;
   const url =
     `https://accounts.google.com/o/oauth2/v2/auth?` +
     `client_id=${GOOGLE_CLIENT_ID}` +

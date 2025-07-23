@@ -13,10 +13,10 @@ export async function GET(req: NextRequest) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ clients });
   } else {
-    // For client, return their own locations
-    const { data: locations, error } = await supabaseAdmin().from('locations').select('*').eq('client_id', profile.id);
+    // For regular users, return their own clients
+    const { data: clients, error } = await supabaseAdmin().from('clients').select('*').eq('owner_id', profile.id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ locations });
+    return NextResponse.json({ clients });
   }
 }
 

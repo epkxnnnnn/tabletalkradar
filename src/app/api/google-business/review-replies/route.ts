@@ -6,24 +6,15 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const GOOGLE_ACCESS_TOKEN = process.env.GOOGLE_BUSINESS_ACCESS_TOKEN
-
 export async function POST(request: NextRequest) {
   try {
-    if (!GOOGLE_ACCESS_TOKEN) {
-      return NextResponse.json({ 
-        error: 'Google Business Profile API requires OAuth 2.0 setup',
-        setup_required: true 
-      }, { status: 400 })
-    }
-
     const { review_id, reply_text } = await request.json()
 
     if (!review_id || !reply_text) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Get review details from database
+    // Get review and client credentials from database
     const { data: review, error: reviewError } = await supabase
       .from('reviews')
       .select(`
@@ -31,7 +22,13 @@ export async function POST(request: NextRequest) {
         client_locations!inner(
           google_place_id,
           google_account_id,
-          clients!inner(agency_id)
+          clients!inner(
+            agency_id,
+            google_refresh_token,
+            google_client_id,
+            google_client_secret,
+            business_name
+          )
         )
       `)
       .eq('id', review_id)
@@ -41,9 +38,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Review not found' }, { status: 404 })
     }
 
-    if (!review.client_locations.google_place_id) {
+    const client = review.client_locations.clients[0]
+    if (!client.google_refresh_token) {
       return NextResponse.json({ 
-        error: 'Google Place ID not found for this location' 
+        error: 'Google Business Profile API requires OAuth 2.0 setup',
+        setup_required: true 
       }, { status: 400 })
     }
 
@@ -55,31 +54,24 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    const accountId = review.client_locations.google_account_id
-    const locationId = review.client_locations.google_place_id
-
-    // Create reply via Google My Business API
-    const response = await fetch(
-      `https://mybusiness.googleapis.com/v4/accounts/${accountId}/locations/${locationId}/reviews/${googleReviewId}/reply`,
-      {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${GOOGLE_ACCESS_TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          comment: reply_text
-        })
+    // Call Supabase Edge Function for GMB reply
+    const { data, error } = await supabase.functions.invoke('gmb-reply', {
+      body: {
+        refresh_token: client.google_refresh_token,
+        account_id: review.client_locations.google_account_id,
+        client_id: client.google_client_id,
+        client_secret: client.google_client_secret,
+        location_id: review.client_locations.google_place_id,
+        review_id: googleReviewId,
+        reply_text: reply_text
       }
-    )
+    })
 
-    const data = await response.json()
-
-    if (!response.ok) {
+    if (error) {
       return NextResponse.json({ 
         error: 'Failed to post reply to Google',
-        details: data.error?.message || 'Unknown error'
-      }, { status: response.status })
+        details: error.message || 'Unknown error'
+      }, { status: 400 })
     }
 
     // Update review status in database
@@ -104,7 +96,7 @@ export async function POST(request: NextRequest) {
         review_id: review_id,
         location_id: review.location_id,
         client_id: review.client_id,
-        agency_id: review.client_locations.clients?.[0]?.agency_id,
+        agency_id: client.agency_id,
         activity_type: 'reply_posted',
         activity_data: {
           reply_text: reply_text,
@@ -115,7 +107,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      reply: data,
+      reply: data.reply,
       message: 'Reply posted successfully to Google My Business'
     })
 
@@ -128,16 +120,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE endpoint to remove a reply
+// DELETE endpoint to remove a reply (Note: GMB API may not support this - keeping for future use)
 export async function DELETE(request: NextRequest) {
   try {
-    if (!GOOGLE_ACCESS_TOKEN) {
-      return NextResponse.json({ 
-        error: 'Google Business Profile API requires OAuth 2.0 setup',
-        setup_required: true 
-      }, { status: 400 })
-    }
-
     const { searchParams } = new URL(request.url)
     const reviewId = searchParams.get('review_id')
 
@@ -145,48 +130,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Review ID required' }, { status: 400 })
     }
 
-    // Get review details
-    const { data: review, error: reviewError } = await supabase
-      .from('reviews')
-      .select(`
-        *,
-        client_locations!inner(
-          google_place_id,
-          google_account_id,
-          clients!inner(agency_id)
-        )
-      `)
-      .eq('id', reviewId)
-      .single()
-
-    if (reviewError || !review) {
-      return NextResponse.json({ error: 'Review not found' }, { status: 404 })
-    }
-
-    const googleReviewId = review.external_review_id?.replace('google_', '').split('_')[1]
-    const accountId = review.client_locations.google_account_id
-    const locationId = review.client_locations.google_place_id
-
-    // Delete reply via Google My Business API
-    const response = await fetch(
-      `https://mybusiness.googleapis.com/v4/accounts/${accountId}/locations/${locationId}/reviews/${googleReviewId}/reply`,
-      {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${GOOGLE_ACCESS_TOKEN}`
-        }
-      }
-    )
-
-    if (!response.ok) {
-      const data = await response.json()
-      return NextResponse.json({ 
-        error: 'Failed to delete reply from Google',
-        details: data.error?.message || 'Unknown error'
-      }, { status: response.status })
-    }
-
-    // Update review status in database
+    // For now, just update the database status since Google doesn't always allow reply deletion
     await supabase
       .from('reviews')
       .update({
@@ -197,33 +141,21 @@ export async function DELETE(request: NextRequest) {
       })
       .eq('id', reviewId)
 
-    // Log the activity
-    await supabase
-      .from('review_activities')
-      .insert({
-        review_id: reviewId,
-        location_id: review.location_id,
-        client_id: review.client_id,
-        agency_id: review.client_locations.clients?.[0]?.agency_id,
-        activity_type: 'reply_deleted',
-        created_at: new Date().toISOString()
-      })
-
     return NextResponse.json({
       success: true,
-      message: 'Reply deleted successfully from Google My Business'
+      message: 'Reply status updated (Google My Business may not support reply deletion)'
     })
 
   } catch (error) {
-    console.error('Error deleting review reply:', error)
+    console.error('Error updating review reply status:', error)
     return NextResponse.json(
-      { error: 'Failed to delete reply' },
+      { error: 'Failed to update reply status' },
       { status: 500 }
     )
   }
 }
 
-// GET endpoint to fetch reply status and data
+// GET endpoint to fetch reviews with AI-generated reply suggestions
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -233,6 +165,75 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Location ID required' }, { status: 400 })
     }
 
+    // Get location and client details
+    const { data: location, error: locationError } = await supabase
+      .from('client_locations')
+      .select(`
+        *,
+        clients!inner(
+          agency_id,
+          google_refresh_token,
+          google_client_id,
+          google_client_secret,
+          business_name
+        )
+      `)
+      .eq('id', locationId)
+      .single()
+
+    if (locationError || !location) {
+      return NextResponse.json({ error: 'Location not found' }, { status: 404 })
+    }
+
+    const client = location.clients[0]
+    
+    // If we have Google credentials, fetch reviews with AI suggestions via Edge Function
+    if (client.google_refresh_token) {
+      const { data: reviewsData, error: reviewsError } = await supabase.functions.invoke('gmb-reviews', {
+        body: {
+          refresh_token: client.google_refresh_token,
+          account_id: location.google_account_id,
+          client_id: client.google_client_id,
+          client_secret: client.google_client_secret,
+          business_name: client.business_name
+        }
+      })
+
+      if (reviewsError) {
+        console.error('Error fetching reviews from Edge Function:', reviewsError)
+      } else if (reviewsData) {
+        // Process and store reviews in database
+        const locations = reviewsData.locations?.locations || []
+        for (const loc of locations) {
+          const locId = loc.name.split('/').pop()
+          const reviews = reviewsData.reviews?.[locId]?.reviews || []
+          
+          for (const review of reviews) {
+            await supabase
+              .from('reviews')
+              .upsert({
+                location_id: locationId,
+                client_id: location.client_id,
+                platform: 'google',
+                external_review_id: `google_${locId}_${review.reviewId || review.name}`,
+                reviewer_name: review.reviewer?.displayName || 'Anonymous',
+                rating: review.starRating || 0,
+                review_text: review.comment || '',
+                review_date: review.createTime || new Date().toISOString(),
+                response_status: review.reviewReply ? 'responded' : 'pending',
+                response_text: review.reviewReply?.comment || null,
+                response_date: review.reviewReply?.updateTime || null,
+                ai_suggested_reply: review.suggested_reply || null,
+                sentiment: review.starRating >= 4 ? 'positive' : review.starRating >= 3 ? 'neutral' : 'negative'
+              }, {
+                onConflict: 'external_review_id'
+              })
+          }
+        }
+      }
+    }
+
+    // Fetch reviews from database
     const { data: reviews, error } = await supabase
       .from('reviews')
       .select(`
@@ -245,7 +246,8 @@ export async function GET(request: NextRequest) {
         response_text,
         response_date,
         sentiment,
-        platform
+        platform,
+        ai_suggested_reply
       `)
       .eq('location_id', locationId)
       .eq('platform', 'google')

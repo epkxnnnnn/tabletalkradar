@@ -120,23 +120,28 @@ interface GoogleBusinessProfile {
 }
 
 class GoogleBusinessService {
-  private accessToken: string | null = null
+  private accessTokens: Map<string, string> = new Map() // clientId -> accessToken
   private readonly baseURL = 'https://mybusinessbusinessinformation.googleapis.com/v1'
   private readonly reviewsURL = 'https://mybusiness.googleapis.com/v4'
 
-  setAccessToken(token: string) {
-    this.accessToken = token
+  setAccessToken(clientId: string, token: string) {
+    this.accessTokens.set(clientId, token)
   }
 
-  private async makeRequest(url: string, options: RequestInit = {}) {
-    if (!this.accessToken) {
-      throw new Error('Google Business access token not set')
+  getAccessToken(clientId: string): string | null {
+    return this.accessTokens.get(clientId) || null
+  }
+
+  private async makeRequest(clientId: string, url: string, options: RequestInit = {}) {
+    const accessToken = this.getAccessToken(clientId)
+    if (!accessToken) {
+      throw new Error(`Google Business access token not set for client ${clientId}`)
     }
 
     const response = await fetch(url, {
       ...options,
       headers: {
-        'Authorization': `Bearer ${this.accessToken}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
         ...options.headers
       }
@@ -150,26 +155,26 @@ class GoogleBusinessService {
     return response.json()
   }
 
-  // Get all business locations for an account
-  async getLocations(accountId: string): Promise<GoogleBusinessLocation[]> {
+  // Get all business locations for a client account
+  async getLocations(clientId: string, accountId: string): Promise<GoogleBusinessLocation[]> {
     const url = `${this.baseURL}/accounts/${accountId}/locations`
-    const response = await this.makeRequest(url)
+    const response = await this.makeRequest(clientId, url)
     return response.locations || []
   }
 
   // Get specific location details
-  async getLocation(locationName: string): Promise<GoogleBusinessProfile> {
+  async getLocation(clientId: string, locationName: string): Promise<GoogleBusinessProfile> {
     const url = `${this.baseURL}/${locationName}`
-    return this.makeRequest(url)
+    return this.makeRequest(clientId, url)
   }
 
   // Get reviews for a location
-  async getReviews(locationName: string): Promise<GoogleReview[]> {
+  async getReviews(clientId: string, locationName: string): Promise<GoogleReview[]> {
     // Note: The Reviews API requires special approval from Google
     // This is a placeholder implementation
     const url = `${this.reviewsURL}/${locationName}/reviews`
     try {
-      const response = await this.makeRequest(url)
+      const response = await this.makeRequest(clientId, url)
       return response.reviews || []
     } catch (error) {
       console.warn('Reviews API not available:', error)
@@ -178,9 +183,9 @@ class GoogleBusinessService {
   }
 
   // Reply to a review
-  async replyToReview(reviewName: string, reply: string): Promise<void> {
+  async replyToReview(clientId: string, reviewName: string, reply: string): Promise<void> {
     const url = `${this.reviewsURL}/${reviewName}/reply`
-    await this.makeRequest(url, {
+    await this.makeRequest(clientId, url, {
       method: 'PUT',
       body: JSON.stringify({
         comment: reply
@@ -189,18 +194,18 @@ class GoogleBusinessService {
   }
 
   // Update business information
-  async updateLocation(locationName: string, updates: Partial<GoogleBusinessProfile>): Promise<GoogleBusinessProfile> {
+  async updateLocation(clientId: string, locationName: string, updates: Partial<GoogleBusinessProfile>): Promise<GoogleBusinessProfile> {
     const url = `${this.baseURL}/${locationName}`
-    return this.makeRequest(url, {
+    return this.makeRequest(clientId, url, {
       method: 'PATCH',
       body: JSON.stringify(updates)
     })
   }
 
   // Get business insights (requires Google My Business API)
-  async getInsights(locationName: string, startDate: string, endDate: string) {
+  async getInsights(clientId: string, locationName: string, startDate: string, endDate: string) {
     const url = `${this.reviewsURL}/${locationName}/reportInsights`
-    return this.makeRequest(url, {
+    return this.makeRequest(clientId, url, {
       method: 'POST',
       body: JSON.stringify({
         locationNames: [locationName],

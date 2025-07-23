@@ -1,0 +1,14 @@
+{
+  "model": "moonshot-v2-128k",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a senior full-stack software engineer with deep expertise in TypeScript, Next.js (App Router), Supabase, Tailwind, and PostgreSQL. Your job is to refactor and enhance a production-grade SaaS dashboard application without breaking anything. Prioritize stability, modularity, and performance. All code suggestions must preserve existing functionality unless explicitly replaced."
+    },
+    {
+      "role": "user",
+      "content": "You're working on a project called TableTalk. It’s a Next.js + Supabase + Twilio + Square + Resend-powered restaurant operations dashboard. Features include Google Business integration, review response automation, SMS/email campaigns, restaurant performance analytics, and client portals.\n\nYour tasks:\n\n1. Deeply review and refactor the codebase to improve structure and modularity\n2. Replace any poor patterns (e.g. inline config, magic strings, tight component logic)\n3. Ensure Super Admin access shows all clients and functions correctly (multi-location support)\n4. Convert all `location_id` usage to use the `client_locations` table properly\n5. Add global error boundaries and loading states where missing\n6. Improve DX and scalability (e.g. folder structure, API layers, constants)\n7. Secure all .env usage and remove any sensitive hardcoded values\n8. Maintain working Supabase RLS policies and webhook functionality\n\nYou may ask for specific files or folders. I will paste them in as needed. Start with general recommendations and request relevant files if needed."
+    }
+  ],
+  "temperature": 0.3
+}

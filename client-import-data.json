@@ -1,0 +1,149 @@
+[
+  {
+    "business_name": "LullaBar Thai Fusion",
+    "website": "https://lullabarlv.com/",
+    "contact_email": "lullabar@updates.reppro.io",
+    "contact_phone": "(702) 760-7888",
+    "industry": "food-beverage",
+    "business_type": "restaurant",
+    "category": "Thai Fusion Restaurant",
+    "notes": "Code: lullabar, Google Biz ID: 05162981688351067589",
+    "locations": [
+      {
+        "business_name": "LullaBar Thai Fusion",
+        "address": "",
+        "city": "Las Vegas",
+        "state": "NV",
+        "zip_code": "",
+        "phone": "(702) 760-7888",
+        "website": "https://lullabarlv.com/"
+      }
+    ]
+  },
+  {
+    "business_name": "Alisa Sushi & Thai Bistro",
+    "website": "https://alisasushithai.com/",
+    "contact_email": "alisa@updates.reppro.io",
+    "contact_phone": "(808) 359-7896",
+    "industry": "food-beverage",
+    "business_type": "restaurant",
+    "category": "Sushi & Thai Restaurant",
+    "notes": "Code: alisa_sushi, Google Biz ID: 13939946554744103274",
+    "locations": [
+      {
+        "business_name": "Alisa Sushi & Thai Bistro",
+        "address": "",
+        "city": "Lihue",
+        "state": "HI",
+        "zip_code": "",
+        "phone": "(808) 359-7896",
+        "website": "https://alisasushithai.com/"
+      }
+    ]
+  },
+  {
+    "business_name": "Koloa Thai Bistro",
+    "website": "https://koloathai.com/",
+    "contact_email": "koloa@updates.reppro.io",
+    "contact_phone": "(808) 359-7878",
+    "industry": "food-beverage",
+    "business_type": "restaurant",
+    "category": "Thai Restaurant",
+    "notes": "Code: koloa_thai, Google Biz ID: 01432254699959395236",
+    "locations": [
+      {
+        "business_name": "Koloa Thai Bistro",
+        "address": "",
+        "city": "Koloa",
+        "state": "HI",
+        "zip_code": "",
+        "phone": "(808) 359-7878",
+        "website": "https://koloathai.com/"
+      }
+    ]
+  },
+  {
+    "business_name": "Daikon Vegan Sushi & More",
+    "website": "https://daikonvegansushi.com/",
+    "contact_email": "daikon@updates.reppro.io",
+    "contact_phone": "(702) 749-3283",
+    "industry": "food-beverage",
+    "business_type": "restaurant",
+    "category": "Vegan Sushi Restaurant",
+    "notes": "Code: daikon_vegan, Google Biz ID: 17268413971148579646",
+    "locations": [
+      {
+        "business_name": "Daikon Vegan Sushi & More",
+        "address": "",
+        "city": "Las Vegas",
+        "state": "NV",
+        "zip_code": "",
+        "phone": "(702) 749-3283",
+        "website": "https://daikonvegansushi.com/"
+      }
+    ]
+  },
+  {
+    "business_name": "Basil Vegan Thai & Sushi",
+    "website": "https://basilveganthai.com/",
+    "contact_email": "basil@updates.reppro.io",
+    "contact_phone": "(702) 357-3837",
+    "industry": "food-beverage",
+    "business_type": "restaurant",
+    "category": "Vegan Thai & Sushi Restaurant",
+    "notes": "Code: basil_vegan, Google Biz ID: 12704341248342351590",
+    "locations": [
+      {
+        "business_name": "Basil Vegan Thai & Sushi",
+        "address": "",
+        "city": "Las Vegas",
+        "state": "NV",
+        "zip_code": "",
+        "phone": "(702) 357-3837",
+        "website": "https://basilveganthai.com/"
+      }
+    ]
+  },
+  {
+    "business_name": "Bright Facial Spa & Thai Massage",
+    "website": "https://www.brightspalv.com/",
+    "contact_email": "brightspa@updates.reppro.io",
+    "contact_phone": "(725) 696-4289",
+    "industry": "health-wellness",
+    "business_type": "spa",
+    "category": "Facial Spa & Massage",
+    "notes": "Code: bright_spa, Google Biz ID: 05826165322071156658",
+    "locations": [
+      {
+        "business_name": "Bright Facial Spa & Thai Massage",
+        "address": "",
+        "city": "Las Vegas",
+        "state": "NV",
+        "zip_code": "",
+        "phone": "(725) 696-4289",
+        "website": "https://www.brightspalv.com/"
+      }
+    ]
+  },
+  {
+    "business_name": "Chang Kao Thai Cuisine",
+    "website": "https://www.changkaothai.com/",
+    "contact_email": "changkao@updates.reppro.io",
+    "contact_phone": "(941) 739-2217",
+    "industry": "food-beverage",
+    "business_type": "restaurant",
+    "category": "Thai Restaurant",
+    "notes": "Code: changkao, Google Biz ID: 7603485187217417605",
+    "locations": [
+      {
+        "business_name": "Chang Kao Thai Cuisine",
+        "address": "",
+        "city": "Bradenton",
+        "state": "FL",
+        "zip_code": "",
+        "phone": "(941) 739-2217",
+        "website": "https://www.changkaothai.com/"
+      }
+    ]
+  }
+]

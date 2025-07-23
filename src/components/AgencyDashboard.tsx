@@ -18,6 +18,8 @@ import AIAnalysisPanel from './AIAnalysisPanel'
 import ReviewResponder from './ReviewResponder'
 import ManualPostHelper from './ManualPostHelper'
 import ClientUserInvite from './ClientUserInvite'
+import GoogleBusinessManager from './GoogleBusinessManager'
+import ClientImporter from './ClientImporter'
 import { 
   EnhancedClient, 
   ClientPerformanceMetrics,
@@ -332,6 +334,8 @@ export default function AgencyDashboard() {
             { id: 'clients', name: 'Clients', show: isSuperAdmin || permissions?.can_create_clients || permissions?.can_edit_clients || permissions?.can_view_all_audits },
             { id: 'reviews', name: 'Reviews', show: isSuperAdmin || permissions?.can_create_clients || permissions?.can_edit_clients },
             { id: 'social', name: 'Social Media', show: isSuperAdmin || permissions?.can_create_clients || permissions?.can_edit_clients },
+            { id: 'gmb', name: 'Google My Business', show: isSuperAdmin || permissions?.can_create_clients || permissions?.can_edit_clients },
+            { id: 'import', name: 'Import Clients', show: isSuperAdmin || permissions?.can_create_clients || permissions?.can_edit_clients },
             { id: 'client-access', name: 'Client Access', show: isSuperAdmin || permissions?.can_create_clients || permissions?.can_edit_clients },
             { id: 'ai-analysis', name: 'AI Analysis', show: isSuperAdmin || permissions?.can_access_ai_insights },
             { id: 'intelligence', name: 'Intelligence', show: isSuperAdmin || permissions?.can_access_ai_insights },
@@ -706,6 +710,14 @@ export default function AgencyDashboard() {
 
         {activeTab === 'social' && (isSuperAdmin || permissions?.can_create_clients || permissions?.can_edit_clients) && (
           <ManualPostHelper />
+        )}
+
+        {activeTab === 'gmb' && (isSuperAdmin || permissions?.can_create_clients || permissions?.can_edit_clients) && (
+          <GoogleBusinessManager />
+        )}
+
+        {activeTab === 'import' && (isSuperAdmin || permissions?.can_create_clients || permissions?.can_edit_clients) && (
+          <ClientImporter />
         )}
 
         {activeTab === 'client-access' && (isSuperAdmin || permissions?.can_create_clients || permissions?.can_edit_clients) && (

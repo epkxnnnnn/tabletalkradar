@@ -11,6 +11,13 @@ interface Location {
   state: string
   google_place_id?: string
   google_account_id?: string
+  clients?: {
+    id: string
+    business_name: string
+    google_refresh_token?: string
+    google_client_id?: string
+    google_business_verified?: boolean
+  }[]
 }
 
 interface Review {
@@ -75,6 +82,15 @@ export default function GoogleBusinessManager() {
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null)
   const [answerText, setAnswerText] = useState('')
 
+  const handleGoogleConnect = (clientId: string) => {
+    // Redirect to Google OAuth with client ID
+    window.location.href = `/api/google-business/auth?client_id=${clientId}`
+  }
+
+  const isGoogleConnected = (location: any) => {
+    return location.clients?.[0]?.google_refresh_token && location.clients?.[0]?.google_business_verified
+  }
+
   useEffect(() => {
     loadLocations()
   }, [])
@@ -93,7 +109,22 @@ export default function GoogleBusinessManager() {
     try {
       const { data, error } = await supabase
         .from('client_locations')
-        .select('id, business_name, address, city, state, google_place_id, google_account_id')
+        .select(`
+          id, 
+          business_name, 
+          address, 
+          city, 
+          state, 
+          google_place_id, 
+          google_account_id,
+          clients!inner(
+            id,
+            business_name,
+            google_refresh_token,
+            google_client_id,
+            google_business_verified
+          )
+        `)
         .eq('is_active', true)
         .order('business_name')
 
@@ -300,15 +331,30 @@ export default function GoogleBusinessManager() {
             {locations.map(location => (
               <option key={location.id} value={location.id}>
                 {location.business_name} - {location.city}, {location.state}
-                {location.google_place_id && ' ✓'}
+                {isGoogleConnected(location) ? ' 🟢 Connected' : ' 🔴 Not Connected'}
               </option>
             ))}
           </select>
           
-          {selectedLocation && !selectedLocation.google_place_id && (
-            <p className="text-yellow-400 text-xs mt-1">
-              ⚠️ Missing Google Place ID - run Google Review Scraper first
-            </p>
+          {selectedLocation && !isGoogleConnected(selectedLocation) && (
+            <div className="mt-3 p-3 bg-red-900/20 border border-red-500/30 rounded-lg">
+              <p className="text-red-400 text-sm mb-2">
+                Google My Business not connected for this location
+              </p>
+              <button
+                onClick={() => handleGoogleConnect(selectedLocation.clients?.[0]?.id || '')}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium"
+              >
+                Connect Google Account
+              </button>
+            </div>
+          )}
+          
+          {selectedLocation && isGoogleConnected(selectedLocation) && (
+            <div className="mt-2 flex items-center text-green-400 text-sm">
+              <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+              Google My Business Connected
+            </div>
           )}
         </div>
 
