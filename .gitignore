@@ -30,6 +30,7 @@ yarn-error.log*
 .env*.local
 .env.development
 .env.production
+!.env.example
 
 # Claude settings - contains potentially sensitive data
 .claude/
