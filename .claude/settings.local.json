@@ -42,7 +42,8 @@
       "Bash(sudo killall:*)",
       "Bash(npm uninstall:*)",
       "Bash(true)",
-      "WebFetch(domain:tabletalk-g6myb5sim-reppro.vercel.app)"
+      "WebFetch(domain:tabletalk-g6myb5sim-reppro.vercel.app)",
+      "WebFetch(domain:tabletalkradar.com)"
     ],
     "deny": []
   }

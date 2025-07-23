@@ -26,10 +26,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<any | null>(null)
 
   useEffect(() => {
+    // Set a timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      console.log('Auth timeout - setting loading to false')
+      setLoading(false)
+    }, 5000)
+
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      clearTimeout(timeout)
+      if (error) {
+        console.error('Auth session error:', error)
+      }
       setSession(session)
       setUser(session?.user ?? null)
+      setLoading(false)
+    }).catch((error) => {
+      clearTimeout(timeout)
+      console.error('Auth initialization error:', error)
       setLoading(false)
     })
 
@@ -42,7 +56,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      clearTimeout(timeout)
+      subscription.unsubscribe()
+    }
   }, [])
 
   useEffect(() => {
@@ -52,7 +69,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select('*')
         .eq('id', user.id)
         .single()
-        .then(({ data }) => setProfile(data))
+        .then(({ data, error }) => {
+          if (error) {
+            console.error('Profile loading error:', error)
+            setProfile(null)
+          } else {
+            setProfile(data)
+          }
+        })
+        .catch((error) => {
+          console.error('Profile fetch error:', error)
+          setProfile(null)
+        })
     } else {
       setProfile(null)
     }
