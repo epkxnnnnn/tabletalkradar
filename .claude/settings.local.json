@@ -32,7 +32,8 @@
       "WebFetch(domain:developers.google.com)",
       "Bash(find:*)",
       "Bash(touch:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(git cherry-pick:*)"
     ],
     "deny": []
   }

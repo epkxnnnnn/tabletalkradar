@@ -1,21 +1,34 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+// Lazy initialization to avoid build-time errors
+let adminClient: ReturnType<typeof createClient> | null = null
 
 // Admin client for server-side operations
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
+export const supabaseAdmin = () => {
+  if (!adminClient) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing Supabase environment variables')
+    }
+    
+    adminClient = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
   }
-})
+  
+  return adminClient
+}
 
 // Function to create superadmin account
 export async function createSuperAdmin() {
   try {
     // Create the user account
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
+    const { data: userData, error: userError } = await supabaseAdmin().auth.admin.createUser({
       email: 'kphstk@gmail.com',
       password: 'tabletalksuperadmin2025',
       email_confirm: true,
@@ -32,7 +45,7 @@ export async function createSuperAdmin() {
     }
 
     // Create profile record
-    const { error: profileError } = await supabaseAdmin
+    const { error: profileError } = await supabaseAdmin()
       .from('profiles')
       .insert({
         id: userData.user.id,
@@ -57,9 +70,9 @@ export async function createSuperAdmin() {
 }
 
 export async function getProfile(access_token: string) {
-  const { data: { user }, error } = await supabaseAdmin.auth.getUser(access_token);
+  const { data: { user }, error } = await supabaseAdmin().auth.getUser(access_token);
   if (error || !user) return null;
   // Fetch profile from profiles table
-  const { data: profile } = await supabaseAdmin.from('profiles').select('*').eq('id', user.id).single();
+  const { data: profile } = await supabaseAdmin().from('profiles').select('*').eq('id', user.id).single();
   return profile;
 } 

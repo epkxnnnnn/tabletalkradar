@@ -9,12 +9,12 @@ export async function GET(req: NextRequest) {
   const profile = await getProfile(access_token);
   if (!profile) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   if (profile.role === 'superadmin') {
-    const { data: clients, error } = await supabaseAdmin.from('clients').select('*').order('created_at', { ascending: false });
+    const { data: clients, error } = await supabaseAdmin().from('clients').select('*').order('created_at', { ascending: false });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ clients });
   } else {
     // For client, return their own locations
-    const { data: locations, error } = await supabaseAdmin.from('locations').select('*').eq('client_id', profile.id);
+    const { data: locations, error } = await supabaseAdmin().from('locations').select('*').eq('client_id', profile.id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ locations });
   }
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
   // Create user in Supabase Auth
-  const { data: user, error: userError } = await supabaseAdmin.auth.admin.createUser({
+  const { data: user, error: userError } = await supabaseAdmin().auth.admin.createUser({
     email,
     email_confirm: true,
     user_metadata: { name, role: 'client' },
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: userError.message }, { status: 400 });
   }
   // Insert into clients table
-  const { error: insertError } = await supabaseAdmin.from('clients').insert({
+  const { error: insertError } = await supabaseAdmin().from('clients').insert({
     id: user.user?.id,
     email,
     name,

@@ -34,7 +34,7 @@ export async function GET() {
   let supabaseTest = { connected: false, hasAuditsTable: false }
   
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin()
       .from('audits')
       .select('count')
       .limit(1)

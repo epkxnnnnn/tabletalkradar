@@ -266,7 +266,7 @@ export async function POST(request: Request) {
 
     // Save to database
     try {
-      const { error } = await supabaseAdmin
+      const { error } = await supabaseAdmin()
         .from('audits')
         .insert({
           id: auditId,

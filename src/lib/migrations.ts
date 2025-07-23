@@ -26,7 +26,7 @@ class MigrationManager {
       version: 1,
       description: 'Create initial database schema with profiles, clients, audits tables',
       up: async () => {
-        await supabaseAdmin.rpc('exec_sql', {
+        await supabaseAdmin().rpc('exec_sql', {
           sql: `
             -- Enable UUID extension
             CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -75,7 +75,7 @@ class MigrationManager {
         })
       },
       down: async () => {
-        await supabaseAdmin.rpc('exec_sql', {
+        await supabaseAdmin().rpc('exec_sql', {
           sql: `
             DROP TABLE IF EXISTS audits;
             DROP TABLE IF EXISTS clients;
@@ -92,7 +92,7 @@ class MigrationManager {
       version: 2,
       description: 'Add action_items, report_templates, and reports tables',
       up: async () => {
-        await supabaseAdmin.rpc('exec_sql', {
+        await supabaseAdmin().rpc('exec_sql', {
           sql: `
             -- Create action_items table
             CREATE TABLE IF NOT EXISTS action_items (
@@ -137,7 +137,7 @@ class MigrationManager {
         })
       },
       down: async () => {
-        await supabaseAdmin.rpc('exec_sql', {
+        await supabaseAdmin().rpc('exec_sql', {
           sql: `
             DROP TABLE IF EXISTS reports;
             DROP TABLE IF EXISTS report_templates;
@@ -154,7 +154,7 @@ class MigrationManager {
       version: 3,
       description: 'Add integrations, team_members, communications, and performance_metrics tables',
       up: async () => {
-        await supabaseAdmin.rpc('exec_sql', {
+        await supabaseAdmin().rpc('exec_sql', {
           sql: `
             -- Create integrations table
             CREATE TABLE IF NOT EXISTS integrations (
@@ -216,7 +216,7 @@ class MigrationManager {
         })
       },
       down: async () => {
-        await supabaseAdmin.rpc('exec_sql', {
+        await supabaseAdmin().rpc('exec_sql', {
           sql: `
             DROP TABLE IF EXISTS performance_metrics;
             DROP TABLE IF EXISTS communications;
@@ -250,7 +250,7 @@ class MigrationManager {
   }
 
   private async createMigrationsTable(): Promise<void> {
-    await supabaseAdmin.rpc('exec_sql', {
+    await supabaseAdmin().rpc('exec_sql', {
       sql: `
         CREATE TABLE IF NOT EXISTS schema_migrations (
           id SERIAL PRIMARY KEY,
