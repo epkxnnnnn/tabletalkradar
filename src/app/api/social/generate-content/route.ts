@@ -172,7 +172,7 @@ function getIndustryGuidance(industry: string): string {
   }
 
   const key = Object.keys(guidance).find(k => industry.toLowerCase().includes(k))
-  return guidance[key] || guidance['default']
+  return guidance[key || 'default'] || guidance['default']
 }
 
 function getCategoryGuidance(category: string): string {

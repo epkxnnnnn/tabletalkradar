@@ -163,12 +163,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Update phone if we got one
-    if (placeDetails.formatted_phone_number && !location.phone) {
+    if (placeDetails.formatted_phone_number && !(location as any).phone) {
       updateData.phone = placeDetails.formatted_phone_number
     }
 
     // Update website if we got one
-    if (placeDetails.website && !location.website) {
+    if (placeDetails.website && !(location as any).website) {
       updateData.website = placeDetails.website
     }
 

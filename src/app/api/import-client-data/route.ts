@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
         results.push({
           restaurant: restaurant.Name,
           status: 'error',
-          error: error.message
+          error: error instanceof Error ? error.message : 'Unknown error'
         })
       }
     }
