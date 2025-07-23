@@ -25,9 +25,16 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
-.env*.local
+# Environment variables - NEVER commit these!
 .env
+.env*.local
+.env.development
+.env.production
+
+# Claude settings - contains potentially sensitive data
+.claude/
+.claude/*
+settings.local.json
 
 # vercel
 .vercel
