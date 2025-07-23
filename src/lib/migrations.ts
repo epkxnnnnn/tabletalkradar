@@ -230,7 +230,7 @@ class MigrationManager {
 
   async getCurrentVersion(): Promise<number> {
     try {
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseAdmin()
         .from('schema_migrations')
         .select('version')
         .order('version', { ascending: false })
@@ -308,7 +308,7 @@ class MigrationManager {
   }
 
   private async recordMigration(migration: Migration): Promise<void> {
-    await supabaseAdmin
+    await supabaseAdmin()
       .from('schema_migrations')
       .insert({
         version: migration.version,
@@ -317,7 +317,7 @@ class MigrationManager {
   }
 
   private async removeMigration(migration: Migration): Promise<void> {
-    await supabaseAdmin
+    await supabaseAdmin()
       .from('schema_migrations')
       .delete()
       .eq('version', migration.version)
