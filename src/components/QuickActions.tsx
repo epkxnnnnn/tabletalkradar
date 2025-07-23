@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { useAgency } from './AgencyProvider'
+import { useSimpleAgency } from './SimpleAgencyProvider'
 import { useAuth } from './AuthProvider'
 import { supabase } from '@/lib/supabase'
 
@@ -17,25 +17,32 @@ interface QuickAction {
 }
 
 export default function QuickActions() {
-  const { currentAgency, permissions } = useAgency()
-  const { user } = useAuth()
+  const { currentAgency, permissions } = useSimpleAgency()
+  const { user, profile } = useAuth()
+  const isSuperAdmin = profile?.role === 'superadmin' || user?.email === 'kphstk@gmail.com'
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   const handleQuickAudit = async () => {
     setActionLoading('audit')
     try {
       // Get a random active client for demo
-      const { data: clients } = await supabase
+      const clientQuery = supabase
         .from('clients')
         .select('id, business_name')
-        .eq('agency_id', currentAgency?.id)
         .eq('status', 'active')
         .limit(1)
+      
+      // For Super Admin, select from ALL clients, otherwise filter by agency
+      if (!isSuperAdmin && currentAgency?.id) {
+        clientQuery.eq('agency_id', currentAgency.id)
+      }
+      
+      const { data: clients } = await clientQuery
       
       if (clients && clients.length > 0) {
         // Create a quick audit record
         const auditData = {
-          agency_id: currentAgency?.id,
+          agency_id: currentAgency?.id || 'super_admin',
           client_id: clients[0].id,
           audit_type: 'quick',
           overall_score: Math.round(75 + Math.random() * 20), // Random score 75-95
@@ -71,7 +78,7 @@ export default function QuickActions() {
     setActionLoading('intelligence')
     try {
       const intelligenceData = {
-        agency_id: currentAgency?.id,
+        agency_id: currentAgency?.id || 'super_admin',
         intelligence_type: 'opportunity',
         source: 'claude',
         confidence_score: 0.8 + Math.random() * 0.2,
@@ -115,7 +122,7 @@ export default function QuickActions() {
     try {
       const tasksData = [
         {
-          agency_id: currentAgency?.id,
+          agency_id: currentAgency?.id || 'super_admin',
           title: 'Update Social Media Content',
           description: 'Create and schedule social media posts for the week',
           category: 'high_impact',
@@ -131,7 +138,7 @@ export default function QuickActions() {
           success_metrics: ['20% engagement increase', 'Content consistency maintained']
         },
         {
-          agency_id: currentAgency?.id,
+          agency_id: currentAgency?.id || 'super_admin',
           title: 'Client Health Check Review',
           description: 'Review health scores and identify clients needing attention',
           category: 'strategic',
@@ -163,7 +170,7 @@ export default function QuickActions() {
       id: 'quick-audit',
       title: 'Quick Audit',
       description: 'Run instant audit for a client',
-      icon: '🔍',
+      icon: '',
       action: handleQuickAudit,
       loading: actionLoading === 'audit',
       category: 'client'
@@ -172,37 +179,37 @@ export default function QuickActions() {
       id: 'generate-intelligence',
       title: 'Collect Intelligence',
       description: 'Generate market insights',
-      icon: '🧠',
+      icon: '',
       action: handleGenerateIntelligence,
       loading: actionLoading === 'intelligence',
-      disabled: !permissions?.can_access_ai_insights,
+      disabled: !isSuperAdmin && !permissions?.can_access_ai_insights,
       category: 'intelligence'
     },
     {
       id: 'generate-tasks',
       title: 'Generate Tasks',
       description: 'Create priority action items',
-      icon: '📋',
+      icon: '',
       action: handleGenerateTasks,
       loading: actionLoading === 'tasks',
-      disabled: !permissions?.can_manage_automations,
+      disabled: !isSuperAdmin && !permissions?.can_manage_automations,
       category: 'tasks'
     },
     {
       id: 'export-report',
       title: 'Export Report',
       description: 'Download client summary',
-      icon: '📊',
+      icon: '',
       action: async () => {
         setActionLoading('report')
         // Simulate report generation
         setTimeout(() => {
-          alert('📊 Client summary report exported!')
+          alert('Client summary report exported!')
           setActionLoading(null)
         }, 2000)
       },
       loading: actionLoading === 'report',
-      disabled: !permissions?.can_generate_reports,
+      disabled: !isSuperAdmin && !permissions?.can_generate_reports,
       category: 'reports'
     }
   ]
@@ -214,10 +221,10 @@ export default function QuickActions() {
   }, {} as Record<string, QuickAction[]>)
 
   const categoryLabels = {
-    client: '👥 Client Actions',
-    intelligence: '🧠 Intelligence',
-    tasks: '📋 Task Management', 
-    reports: '📊 Reports'
+    client: 'Client Actions',
+    intelligence: 'Intelligence',
+    tasks: 'Task Management', 
+    reports: 'Reports'
   }
 
   return (
@@ -228,7 +235,7 @@ export default function QuickActions() {
           <p className="text-slate-400 text-sm">Common tasks and shortcuts</p>
         </div>
         <div className="text-slate-500 text-sm">
-          ⚡ {quickActions.filter(a => !a.disabled).length} available
+          {quickActions.filter(a => !a.disabled).length} available
         </div>
       </div>
 
@@ -254,7 +261,9 @@ export default function QuickActions() {
                   `}
                 >
                   <div className="flex items-center space-x-3">
-                    <span className="text-2xl">{action.icon}</span>
+                    <div className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center">
+                      <div className="w-4 h-4 bg-white rounded-sm"></div>
+                    </div>
                     <div className="flex-1">
                       <div className="font-medium text-sm">
                         {action.loading ? 'Processing...' : action.title}

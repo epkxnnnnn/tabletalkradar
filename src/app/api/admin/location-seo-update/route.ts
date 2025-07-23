@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get current location data
-    const { data: location, error: locationError } = await supabase
+    const { data: location, error: locationError } = await supabaseAdmin()
       .from('client_locations')
       .select('*')
       .eq('id', location_id)
@@ -106,7 +101,7 @@ async function updateSEOScores(locationId: string, newScores: any, currentLocati
     seo_data_last_updated: new Date().toISOString()
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin()
     .from('client_locations')
     .update(updates)
     .eq('id', locationId)
@@ -139,7 +134,7 @@ async function updateGoogleBusinessProfile(locationId: string, gbpData: any) {
     gbp_data_last_updated: new Date().toISOString()
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin()
     .from('client_locations')
     .update(updates)
     .eq('id', locationId)
@@ -155,7 +150,7 @@ async function updateKeywordRankings(locationId: string, keywordData: any) {
 
   for (const keyword of keywords) {
     // Get current keyword data
-    const { data: currentKeyword } = await supabase
+    const { data: currentKeyword } = await supabaseAdmin()
       .from('location_keywords')
       .select('*')
       .eq('location_id', locationId)
@@ -165,14 +160,14 @@ async function updateKeywordRankings(locationId: string, keywordData: any) {
     if (currentKeyword) {
       // Calculate rank change
       const rank_change = currentKeyword.current_rank 
-        ? keyword.new_rank - currentKeyword.current_rank 
+        ? (Number(keyword.new_rank) || 0) - (Number(currentKeyword.current_rank) || 0)
         : 0
 
       // Update rank history
-      const rankHistory = currentKeyword.rank_history || []
+      const rankHistory = (currentKeyword.rank_history as any[]) || []
       rankHistory.push({
         date: new Date().toISOString(),
-        rank: keyword.new_rank,
+        rank: Number(keyword.new_rank) || 0,
         change: rank_change
       })
 
@@ -181,21 +176,21 @@ async function updateKeywordRankings(locationId: string, keywordData: any) {
         rankHistory.shift()
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin()
         .from('location_keywords')
         .update({
           previous_rank: currentKeyword.current_rank,
           current_rank: keyword.new_rank,
           rank_change,
-          best_rank: Math.min(currentKeyword.best_rank || 999, keyword.new_rank),
-          worst_rank: Math.max(currentKeyword.worst_rank || 0, keyword.new_rank),
+          best_rank: Math.min(Number(currentKeyword.best_rank) || 999, Number(keyword.new_rank) || 999),
+          worst_rank: Math.max(Number(currentKeyword.worst_rank) || 0, Number(keyword.new_rank) || 0),
           rank_history: rankHistory,
           last_checked_at: new Date().toISOString(),
           search_url: keyword.search_url,
           featured_snippet: keyword.featured_snippet || false,
           local_pack_position: keyword.local_pack_position
         })
-        .eq('id', currentKeyword.id)
+        .eq('id', currentKeyword.id as string)
 
       results.push({ keyword: keyword.keyword, success: !error, rank_change })
     }
@@ -229,21 +224,21 @@ async function performFullAudit(locationId: string, location: any, auditData: an
   }
 
   // Calculate keyword statistics
-  const { data: keywordStats } = await supabase
+  const { data: keywordStats } = await supabaseAdmin()
     .from('location_keywords')
     .select('current_rank')
     .eq('location_id', locationId)
     .eq('is_tracking', true)
 
   const total_keywords_tracked = keywordStats?.length || 0
-  const keywords_ranking_top_3 = keywordStats?.filter(k => k.current_rank && k.current_rank <= 3).length || 0
-  const keywords_ranking_top_10 = keywordStats?.filter(k => k.current_rank && k.current_rank <= 10).length || 0
+  const keywords_ranking_top_3 = keywordStats?.filter(k => k.current_rank && Number(k.current_rank) <= 3).length || 0
+  const keywords_ranking_top_10 = keywordStats?.filter(k => k.current_rank && Number(k.current_rank) <= 10).length || 0
   const average_keyword_rank = keywordStats && keywordStats.length > 0
-    ? keywordStats.reduce((sum, k) => sum + (k.current_rank || 0), 0) / keywordStats.length
+    ? keywordStats.reduce((sum, k) => sum + (Number(k.current_rank) || 0), 0) / keywordStats.length
     : 0
 
   // Create audit record
-  const { data: audit, error: auditError } = await supabase
+  const { data: audit, error: auditError } = await supabaseAdmin()
     .from('location_seo_audits')
     .insert({
       location_id: locationId,
@@ -326,7 +321,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get location with all related data
-    const { data: location, error: locationError } = await supabase
+    const { data: location, error: locationError } = await supabaseAdmin()
       .from('client_locations')
       .select(`
         *,
