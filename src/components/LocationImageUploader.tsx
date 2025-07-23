@@ -13,6 +13,16 @@ export default function LocationImageUploader({ locationId, accountId, refreshTo
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  function arrayBufferToBase64(buffer: ArrayBuffer) {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  }
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
     setSuccess(null);
@@ -30,7 +40,7 @@ export default function LocationImageUploader({ locationId, accountId, refreshTo
       if (!publicUrl) throw new Error('Failed to get public URL');
       // Download file as base64
       const fileBuffer = await file.arrayBuffer();
-      const base64 = btoa(String.fromCharCode(...new Uint8Array(fileBuffer)));
+      const base64 = arrayBufferToBase64(fileBuffer);
       // Post to GMB via Edge Function
       const res = await fetch('/api/gmb/post-image', {
         method: 'POST',
