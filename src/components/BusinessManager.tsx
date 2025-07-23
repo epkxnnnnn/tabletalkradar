@@ -143,6 +143,7 @@ export default function BusinessManager() {
         },
         google_reviews: [
           {
+            name: 'locations/123/reviews/mock_review_1',
             reviewId: 'mock_review_1',
             reviewer: {
               displayName: 'John Doe',
@@ -155,6 +156,7 @@ export default function BusinessManager() {
             updateTime: new Date().toISOString()
           },
           {
+            name: 'locations/123/reviews/mock_review_2',
             reviewId: 'mock_review_2',
             reviewer: {
               displayName: 'Jane Smith',
@@ -166,7 +168,7 @@ export default function BusinessManager() {
             createTime: new Date(Date.now() - 86400000).toISOString(),
             updateTime: new Date(Date.now() - 86400000).toISOString()
           }
-        ],
+        ] as GoogleReview[],
         rating: 4.5,
         review_count: 2,
         last_sync: new Date().toISOString()
