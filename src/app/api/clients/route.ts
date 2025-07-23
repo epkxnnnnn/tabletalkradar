@@ -1,128 +1,54 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { logger } from '@/lib/logger'
+import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin, getProfile } from '@/lib/supabase-admin';
+import { cookies } from 'next/headers';
 
-export async function GET(request: NextRequest) {
-  try {
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options)
-            })
-          },
-        },
-      }
-    )
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    
-    if (sessionError || !session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Get user's agency first
-    const { data: agency } = await supabase
-      .from('agencies')
-      .select('id')
-      .eq('owner_id', session.user.id)
-      .single()
-
-    if (!agency) {
-      return NextResponse.json({ error: 'No agency found for user' }, { status: 404 })
-    }
-
-    const { data: clients, error } = await supabase
-      .from('clients')
-      .select('*')
-      .eq('agency_id', agency.id)
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      logger.error('Error fetching clients', { error, userId: session.user.id })
-      return NextResponse.json({ error: 'Failed to fetch clients' }, { status: 500 })
-    }
-
-    return NextResponse.json({ clients })
-  } catch (error) {
-    logger.error('Unexpected error in GET /api/clients', { error })
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+export async function GET(req: NextRequest) {
+  const cookieStore = await cookies();
+  const access_token = cookieStore.get('sb-access-token')?.value;
+  if (!access_token) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  const profile = await getProfile(access_token);
+  if (!profile) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  if (profile.role === 'superadmin') {
+    const { data: clients, error } = await supabaseAdmin.from('clients').select('*').order('created_at', { ascending: false });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ clients });
+  } else {
+    // For client, return their own locations
+    const { data: locations, error } = await supabaseAdmin.from('locations').select('*').eq('client_id', profile.id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ locations });
   }
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options)
-            })
-          },
-        },
-      }
-    )
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    
-    if (sessionError || !session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const body = await request.json()
-    const { business_name, website, contact_email, contact_phone, category, notes } = body
-
-    if (!business_name) {
-      return NextResponse.json({ error: 'Business name is required' }, { status: 400 })
-    }
-
-    // Get user's agency first
-    const { data: agency } = await supabase
-      .from('agencies')
-      .select('id')
-      .eq('owner_id', session.user.id)
-      .single()
-
-    if (!agency) {
-      return NextResponse.json({ error: 'No agency found for user' }, { status: 404 })
-    }
-
-    const { data: client, error } = await supabase
-      .from('clients')
-      .insert({
-        agency_id: agency.id,
-        business_name,
-        website: website || null,
-        email: contact_email || null,
-        phone: contact_phone || null,
-        industry: category || 'other',
-        custom_fields: notes ? { notes } : {}
-      })
-      .select()
-      .single()
-
-    if (error) {
-      logger.error('Error creating client', { error, userId: session.user.id })
-      return NextResponse.json({ error: 'Failed to create client' }, { status: 500 })
-    }
-
-    logger.info('Client created', { clientId: client.id, userId: session.user.id })
-    return NextResponse.json({ client })
-  } catch (error) {
-    logger.error('Unexpected error in POST /api/clients', { error })
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+export async function POST(req: NextRequest) {
+  const cookieStore = await cookies();
+  const access_token = cookieStore.get('sb-access-token')?.value;
+  if (!access_token) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  const profile = await getProfile(access_token);
+  if (!profile || profile.role !== 'superadmin') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
+  const { email, name } = await req.json();
+  if (!email || !name) {
+    return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+  }
+  // Create user in Supabase Auth
+  const { data: user, error: userError } = await supabaseAdmin.auth.admin.createUser({
+    email,
+    email_confirm: true,
+    user_metadata: { name, role: 'client' },
+  });
+  if (userError) {
+    return NextResponse.json({ error: userError.message }, { status: 400 });
+  }
+  // Insert into clients table
+  const { error: insertError } = await supabaseAdmin.from('clients').insert({
+    id: user.user?.id,
+    email,
+    name,
+  });
+  if (insertError) {
+    return NextResponse.json({ error: insertError.message }, { status: 400 });
+  }
+  return NextResponse.json({ success: true, client: { id: user.user?.id, email, name } });
 }

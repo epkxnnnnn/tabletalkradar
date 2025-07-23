@@ -28,6 +28,7 @@
       "Bash(node:*)",
       "Bash(node test_client_analyzer_flow.js)",
       "Bash(node check_duplicates.js)",
+      "Bash(node fix_client_agencies.js)",
       "WebFetch(domain:developers.google.com)",
       "Bash(find:*)",
       "Bash(touch:*)",

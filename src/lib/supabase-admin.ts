@@ -54,4 +54,12 @@ export async function createSuperAdmin() {
     console.error('Error creating superadmin:', error)
     return { error }
   }
+}
+
+export async function getProfile(access_token: string) {
+  const { data: { user }, error } = await supabaseAdmin.auth.getUser(access_token);
+  if (error || !user) return null;
+  // Fetch profile from profiles table
+  const { data: profile } = await supabaseAdmin.from('profiles').select('*').eq('id', user.id).single();
+  return profile;
 } 

@@ -71,6 +71,23 @@ export default function Dashboard() {
   const isAgency = profile?.role === 'agency' || currentAgency
   const hasAgencyAccess = currentAgency && membership
 
+  // Fetch locations for user or all if superadmin
+  const [locations, setLocations] = useState<any[]>([])
+  useEffect(() => {
+    if (user && profile) {
+      const fetchLocations = async () => {
+        let url = '/api/clients'
+        if (profile.role === 'superadmin') {
+          url += '?all=1'
+        }
+        const res = await fetch(url)
+        const data = await res.json()
+        setLocations(data.clients || [])
+      }
+      fetchLocations()
+    }
+  }, [user, profile])
+
   if (loading || agencyLoading) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
@@ -405,6 +422,23 @@ export default function Dashboard() {
               <p className="text-slate-400">Manage your account preferences and notification settings</p>
             </div>
             <Settings />
+          </div>
+        )}
+
+        {activeTab === 'businesses' && (
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-4">Locations</h2>
+            <ul className="space-y-2">
+              {locations.map((loc) => (
+                <li key={loc.id} className="bg-slate-800 rounded-lg p-4 flex justify-between items-center">
+                  <div>
+                    <div className="font-semibold text-lg text-white">{loc.business_name}</div>
+                    <div className="text-slate-400 text-sm">{loc.website}</div>
+                  </div>
+                  <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm">View Dashboard</button>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </main>

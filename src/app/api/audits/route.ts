@@ -23,37 +23,62 @@ async function createSupabaseClient() {
   )
 }
 
+async function getUserRole(supabase: any, userId: string) {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single()
+  return profile?.role || 'user'
+}
+
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createSupabaseClient()
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    
-    if (sessionError || !session) {
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          }
+        },
+      }
+    )
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
+    const userRole = await getUserRole(supabase, user.id)
     const { searchParams } = new URL(request.url)
     const clientId = searchParams.get('client_id')
-
+    const limit = parseInt(searchParams.get('limit') || '10')
+    const offset = parseInt(searchParams.get('offset') || '0')
     let query = supabase
       .from('audits')
       .select('*')
-      .eq('user_id', session.user.id)
-
-    if (clientId) {
-      query = query.eq('client_id', clientId)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1)
+    if (userRole !== 'superadmin') {
+      // Only allow user to see their own audits (by client_id or user_id)
+      if (clientId) {
+        query = query.eq('client_id', clientId)
+      } else {
+        query = query.eq('client_id', user.id)
+      }
+    } else {
+      // Superadmin: can see all audits, or filter by client_id if provided
+      if (clientId) {
+        query = query.eq('client_id', clientId)
+      }
     }
-
-    const { data: audits, error } = await query.order('created_at', { ascending: false })
-
+    const { data, error } = await query
     if (error) {
-      logger.error('Error fetching audits', { error, userId: session.user.id })
       return NextResponse.json({ error: 'Failed to fetch audits' }, { status: 500 })
     }
-
-    return NextResponse.json({ audits })
+    return NextResponse.json({ audits: data || [] })
   } catch (error) {
-    logger.error('Unexpected error in GET /api/audits', { error })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
