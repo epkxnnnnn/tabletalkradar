@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Next.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_SUPABASE_URL=http://supabase:54321
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    depends_on:
+      - supabase
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # Supabase Local Stack
+  supabase:
+    image: supabase/supabase:latest
+    ports:
+      - "54321:54321"  # API
+      - "54323:54323"  # Studio
+      - "54324:54324"  # Inbucket (Email testing)
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - JWT_SECRET=super-secret-jwt-token-with-at-least-32-characters-long
+      - ANON_KEY=${SUPABASE_ANON_KEY}
+      - SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+    volumes:
+      - ./supabase:/docker-entrypoint-initdb.d
+      - supabase_data:/var/lib/postgresql/data
+
+  # Edge Functions (Deno Runtime)
+  edge-functions:
+    image: denoland/deno:latest
+    ports:
+      - "8083:8083"
+    volumes:
+      - ./supabase/functions:/functions
+    command: deno run --allow-net --allow-env --watch /functions/*/index.ts
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+
+volumes:
+  supabase_data:
