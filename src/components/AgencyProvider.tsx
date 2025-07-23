@@ -138,6 +138,96 @@ export function AgencyProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  // Setup superadmin with main agency
+  const setupSuperAdminAgency = useCallback(async () => {
+    if (!user) return
+
+    try {
+      // First, check if main agency already exists
+      const { data: existingAgency } = await supabase
+        .from('agencies')
+        .select('*')
+        .eq('name', 'TableTalk Agency')
+        .single()
+
+      let mainAgency = existingAgency
+
+      if (!mainAgency) {
+        // Create the main agency for superadmin
+        const { data: newAgency, error: createError } = await supabase
+          .from('agencies')
+          .insert({
+            name: 'TableTalk Agency',
+            owner_id: user.id,
+            subscription_plan: 'enterprise',
+            subscription_status: 'active',
+            settings: {
+              branding: {
+                company_name: 'TableTalk Agency',
+                primary_color: '#3b82f6',
+                logo_url: null
+              }
+            }
+          })
+          .select()
+          .single()
+
+        if (createError) {
+          console.error('Error creating main agency:', createError)
+          return
+        }
+        mainAgency = newAgency
+      }
+
+      // Check if membership exists
+      const { data: existingMembership } = await supabase
+        .from('agency_memberships')
+        .select('*')
+        .eq('agency_id', mainAgency.id)
+        .eq('user_id', user.id)
+        .single()
+
+      let membership = existingMembership
+
+      if (!membership) {
+        // Create membership for superadmin
+        const { data: newMembership, error: membershipError } = await supabase
+          .from('agency_memberships')
+          .insert({
+            agency_id: mainAgency.id,
+            user_id: user.id,
+            role: 'owner',
+            status: 'active'
+          })
+          .select()
+          .single()
+
+        if (membershipError) {
+          console.error('Error creating agency membership:', membershipError)
+          return
+        }
+        membership = newMembership
+      }
+
+      // Set up the superadmin context
+      setCurrentAgency(mainAgency)
+      setMembership(membership)
+      setAvailableAgencies([mainAgency])
+      setPermissions(getDefaultPermissions('owner'))
+
+      // Update user's current agency in profile
+      await supabase
+        .from('profiles')
+        .update({ current_agency_id: mainAgency.id })
+        .eq('id', user.id)
+
+    } catch (error) {
+      console.error('Error setting up superadmin agency:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [user])
+
   // Load user's agencies and current agency context
   const loadAgencyData = useCallback(async () => {
     if (!user) {
@@ -151,6 +241,15 @@ export function AgencyProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setLoading(true)
+
+      // Check if user is superadmin
+      const isSuperAdmin = user.email === 'kphstk@gmail.com'
+      
+      if (isSuperAdmin) {
+        // For superadmin, create or get the main agency
+        await setupSuperAdminAgency()
+        return
+      }
 
       // Get user's agency memberships
       const { data: memberships, error: membershipsError } = await supabase

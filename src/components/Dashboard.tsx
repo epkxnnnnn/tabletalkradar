@@ -87,6 +87,11 @@ export default function Dashboard() {
     )
   }
 
+  // For superadmin users, prioritize agency dashboard access
+  if (isSuperAdmin && (hasAgencyAccess || availableAgencies.length > 0)) {
+    return <AgencyDashboard />
+  }
+
   // If user has agency access, show the new agency dashboard
   if (hasAgencyAccess) {
     return <AgencyDashboard />
@@ -103,7 +108,8 @@ export default function Dashboard() {
   }
 
   // Show agency creation option if user has no agencies but profile suggests they should
-  if (availableAgencies.length === 0 && (profile?.role === 'agency' || isSuperAdmin)) {
+  // Skip this for superadmin as they should auto-redirect to main agency
+  if (availableAgencies.length === 0 && profile?.role === 'agency' && !isSuperAdmin) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-white text-center">
