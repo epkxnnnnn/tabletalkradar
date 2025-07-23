@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useAgency } from './AgencyProvider'
+import { useSimpleAgency as useAgency } from './SimpleAgencyProvider'
 import { useAuth } from './AuthProvider'
 import { supabase } from '@/lib/supabase'
 import Image from 'next/image'
@@ -78,46 +78,62 @@ export default function AgencyDashboard() {
 
     setLoading(true)
     try {
-      // Load clients
-      const { data: clients, error: clientsError } = await supabase
-        .from('clients')
-        .select(`
-          *,
-          client_assignments!inner(
-            user_id,
-            role
-          )
-        `)
-        .eq('agency_id', currentAgency.id)
-        .order('created_at', { ascending: false })
+      // Try to load clients, but handle errors gracefully
+      let clients = []
+      try {
+        const { data: clientsData, error: clientsError } = await supabase
+          .from('clients')
+          .select('*')
+          .eq('user_id', user?.id)
+          .order('created_at', { ascending: false })
 
-      if (clientsError) {
-        console.error('Error loading clients:', clientsError)
-        return
+        if (!clientsError && clientsData) {
+          clients = clientsData
+        }
+      } catch (error) {
+        console.log('Clients table not found, using empty array')
+        clients = []
       }
 
-      // Load recent audits
-      const { data: audits, error: auditsError } = await supabase
-        .from('audits')
-        .select(`
-          *,
-          clients(business_name)
-        `)
-        .eq('agency_id', currentAgency.id)
-        .order('created_at', { ascending: false })
-        .limit(10)
+      // Try to load recent audits, but handle errors gracefully
+      let audits = []
+      try {
+        const { data: auditsData, error: auditsError } = await supabase
+          .from('audits')
+          .select('*')
+          .eq('user_id', user?.id)
+          .order('created_at', { ascending: false })
+          .limit(10)
 
-      // Load market intelligence
-      const { data: intelligence, error: intelligenceError } = await supabase
-        .from('market_intelligence')
-        .select('*')
-        .eq('agency_id', currentAgency.id)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(5)
+        if (!auditsError && auditsData) {
+          audits = auditsData
+        }
+      } catch (error) {
+        console.log('Audits table not found, using empty array')
+        audits = []
+      }
 
-      // Calculate stats
-      const activeClientsCount = clients?.filter(c => c.status === 'active').length || 0
+      // Try to load market intelligence, but handle errors gracefully
+      let intelligence = []
+      try {
+        const { data: intelligenceData, error: intelligenceError } = await supabase
+          .from('market_intelligence')
+          .select('*')
+          .eq('user_id', user?.id)
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(5)
+
+        if (!intelligenceError && intelligenceData) {
+          intelligence = intelligenceData
+        }
+      } catch (error) {
+        console.log('Market intelligence table not found, using empty array')
+        intelligence = []
+      }
+
+      // Calculate stats safely
+      const activeClientsCount = clients?.filter(c => c.status === 'active' || !c.status).length || 0
       const avgScore = audits && audits.length > 0 
         ? audits.reduce((sum, audit) => sum + (audit.overall_score || 0), 0) / audits.length 
         : 0
@@ -127,6 +143,7 @@ export default function AgencyDashboard() {
         activeClients: activeClientsCount,
         avgClientScore: Math.round(avgScore),
         monthlyAudits: audits?.filter(a => {
+          if (!a.created_at) return false
           const auditDate = new Date(a.created_at)
           const now = new Date()
           return auditDate.getMonth() === now.getMonth() && auditDate.getFullYear() === now.getFullYear()
@@ -135,44 +152,52 @@ export default function AgencyDashboard() {
         opportunities: intelligence?.filter(i => i.intelligence_type === 'opportunity').length || 0
       })
 
-      // Set top performing clients
+      // Set top performing clients safely
       const clientsWithScores = clients?.map(client => {
         const recentAudit = audits?.find(a => a.client_id === client.id)
         return {
           ...client,
           last_score: recentAudit?.overall_score || 0,
-          last_audit_at: recentAudit?.created_at
+          last_audit_at: recentAudit?.created_at,
+          business_name: client.business_name || client.name || 'Unknown Business',
+          industry: client.industry || 'General',
+          status: client.status || 'active'
         }
       }).sort((a, b) => (b.last_score || 0) - (a.last_score || 0)).slice(0, 5) || []
       
       setTopClients(clientsWithScores as EnhancedClient[])
 
-      // Create recent activity
+      // Create recent activity safely
       const activities: RecentActivity[] = []
       
       // Add recent audits
       audits?.slice(0, 3).forEach(audit => {
-        activities.push({
-          id: audit.id,
-          type: 'audit',
-          title: 'Audit Completed',
-          description: `${audit.clients?.business_name} - Score: ${audit.overall_score}`,
-          timestamp: audit.created_at,
-          client: audit.clients?.business_name,
-          priority: audit.overall_score > 80 ? 'low' : audit.overall_score > 60 ? 'medium' : 'high'
-        })
+        if (audit.id && audit.created_at) {
+          const clientName = clients?.find(c => c.id === audit.client_id)?.business_name || 'Unknown Client'
+          activities.push({
+            id: audit.id,
+            type: 'audit',
+            title: 'Audit Completed',
+            description: `${clientName} - Score: ${audit.overall_score || 'N/A'}`,
+            timestamp: audit.created_at,
+            client: clientName,
+            priority: (audit.overall_score || 0) > 80 ? 'low' : (audit.overall_score || 0) > 60 ? 'medium' : 'high'
+          })
+        }
       })
 
       // Add intelligence as activities
       intelligence?.slice(0, 2).forEach(intel => {
-        activities.push({
-          id: intel.id,
-          type: intel.intelligence_type === 'opportunity' ? 'opportunity' : 'alert',
-          title: intel.title,
-          description: intel.description,
-          timestamp: intel.created_at,
-          priority: intel.confidence_score > 0.8 ? 'high' : 'medium'
-        })
+        if (intel.id && intel.created_at) {
+          activities.push({
+            id: intel.id,
+            type: intel.intelligence_type === 'opportunity' ? 'opportunity' : 'alert',
+            title: intel.title || 'Market Insight',
+            description: intel.description || 'New market intelligence available',
+            timestamp: intel.created_at,
+            priority: (intel.confidence_score || 0) > 0.8 ? 'high' : 'medium'
+          })
+        }
       })
 
       setRecentActivity(activities.sort((a, b) => 
