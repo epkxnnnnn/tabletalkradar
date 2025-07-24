@@ -120,9 +120,19 @@ export const GET = withMethods(['GET'])(
     const accessToken = await refreshTokenIfNeeded(integration, supabase)
     
     try {
-      // Get posts for the location
+      // Parse the location name to extract account and location IDs
+      // Location name format: accounts/{accountId}/locations/{locationId}
+      const locationParts = locationName.split('/')
+      if (locationParts.length < 4 || locationParts[0] !== 'accounts' || locationParts[2] !== 'locations') {
+        throw new Error('Invalid location name format. Expected: accounts/{accountId}/locations/{locationId}')
+      }
+      
+      const accountId = locationParts[1]
+      const locationId = locationParts[3]
+      
+      // Get posts for the location using v4 API (posts still use v4)
       const postsResponse = await fetch(
-        `https://mybusinessbusinessinformation.googleapis.com/v1/${locationName}/localPosts`,
+        `https://mybusiness.googleapis.com/v4/accounts/${accountId}/locations/${locationId}/localPosts`,
         {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
@@ -178,6 +188,16 @@ export const POST = withMethods(['POST'])(
     const accessToken = await refreshTokenIfNeeded(integration, supabase)
     
     try {
+      // Parse the location name to extract account and location IDs
+      // Location name format: accounts/{accountId}/locations/{locationId}
+      const locationParts = location_name.split('/')
+      if (locationParts.length < 4 || locationParts[0] !== 'accounts' || locationParts[2] !== 'locations') {
+        throw new Error('Invalid location name format. Expected: accounts/{accountId}/locations/{locationId}')
+      }
+      
+      const accountId = locationParts[1]
+      const locationId = locationParts[3]
+      
       // Build post data
       const postData: any = {
         topicType: topic_type,
@@ -198,9 +218,9 @@ export const POST = withMethods(['POST'])(
         }))
       }
       
-      // Create the post
+      // Create the post using v4 API (posts still use v4)
       const createResponse = await fetch(
-        `https://mybusinessbusinessinformation.googleapis.com/v1/${location_name}/localPosts`,
+        `https://mybusiness.googleapis.com/v4/accounts/${accountId}/locations/${locationId}/localPosts`,
         {
           method: 'POST',
           headers: {

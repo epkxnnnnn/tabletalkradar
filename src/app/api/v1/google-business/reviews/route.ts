@@ -120,9 +120,19 @@ export const GET = withMethods(['GET'])(
     const accessToken = await refreshTokenIfNeeded(integration, supabase)
     
     try {
-      // Get reviews for the location
+      // Parse the location name to extract account and location IDs
+      // Location name format: accounts/{accountId}/locations/{locationId}
+      const locationParts = locationName.split('/')
+      if (locationParts.length < 4 || locationParts[0] !== 'accounts' || locationParts[2] !== 'locations') {
+        throw new Error('Invalid location name format. Expected: accounts/{accountId}/locations/{locationId}')
+      }
+      
+      const accountId = locationParts[1]
+      const locationId = locationParts[3]
+      
+      // Get reviews for the location using v4 API (reviews still use v4)
       const reviewsResponse = await fetch(
-        `https://mybusinessbusinessinformation.googleapis.com/v1/${locationName}/reviews`,
+        `https://mybusiness.googleapis.com/v4/accounts/${accountId}/locations/${locationId}/reviews`,
         {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
@@ -183,9 +193,20 @@ export const POST = withMethods(['POST'])(
     const accessToken = await refreshTokenIfNeeded(integration, supabase)
     
     try {
-      // Reply to the review
+      // Parse the review name to extract account, location, and review IDs
+      // Review name format: accounts/{accountId}/locations/{locationId}/reviews/{reviewId}
+      const reviewParts = review_name.split('/')
+      if (reviewParts.length < 6 || reviewParts[0] !== 'accounts' || reviewParts[2] !== 'locations' || reviewParts[4] !== 'reviews') {
+        throw new Error('Invalid review name format. Expected: accounts/{accountId}/locations/{locationId}/reviews/{reviewId}')
+      }
+      
+      const accountId = reviewParts[1]
+      const locationId = reviewParts[3]
+      const reviewId = reviewParts[5]
+      
+      // Reply to the review using v4 API (reviews still use v4)
       const replyResponse = await fetch(
-        `https://mybusinessbusinessinformation.googleapis.com/v1/${review_name}/reply`,
+        `https://mybusiness.googleapis.com/v4/accounts/${accountId}/locations/${locationId}/reviews/${reviewId}/reply`,
         {
           method: 'PUT',
           headers: {
