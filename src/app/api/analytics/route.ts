@@ -84,12 +84,12 @@ export async function GET(request: NextRequest) {
       aiInsights: {
         totalInsights: intelligence.length,
         accuracyRate: calculateAIAccuracy(intelligence),
-        actionableInsights: intelligence.filter(i => i.confidence_score > 0.7).length,
-        trendsIdentified: intelligence.filter(i => i.intelligence_type === 'market_trend').length,
-        risksPrevented: intelligence.filter(i => i.intelligence_type === 'risk').length
+        actionableInsights: intelligence.filter((i: any) => i.confidence_score > 0.7).length,
+        trendsIdentified: intelligence.filter((i: any) => i.intelligence_type === 'market_trend').length,
+        risksPrevented: intelligence.filter((i: any) => i.intelligence_type === 'risk').length
       },
       automationMetrics: {
-        workflowsActive: workflows.filter(w => w.status === 'active').length,
+        workflowsActive: workflows.filter((w: any) => w.status === 'active').length,
         timeSaved: calculateTimeSaved(workflows),
         errorReduction: calculateErrorReduction(workflows),
         costSavings: calculateCostSavings(workflows)
@@ -231,12 +231,12 @@ function getWorkloadDistribution(team: any[]) {
 
 function calculateAIAccuracy(intelligence: any[]): number {
   if (intelligence.length === 0) return 85
-  const avgConfidence = intelligence.reduce((sum, i) => sum + i.confidence_score, 0) / intelligence.length
+  const avgConfidence = intelligence.reduce((sum, i: any) => sum + (i.confidence_score || 0), 0) / intelligence.length
   return avgConfidence * 100
 }
 
 function calculateTimeSaved(workflows: any[]): number {
-  const activeWorkflows = workflows.filter(w => w.status === 'active')
+  const activeWorkflows = workflows.filter((w: any) => w.status === 'active')
   return activeWorkflows.length * 40 + Math.random() * 80 // Estimate hours saved per workflow
 }
 
@@ -245,7 +245,7 @@ function calculateErrorReduction(workflows: any[]): number {
 }
 
 function calculateCostSavings(workflows: any[]): number {
-  const activeWorkflows = workflows.filter(w => w.status === 'active')
+  const activeWorkflows = workflows.filter((w: any) => w.status === 'active')
   return activeWorkflows.length * 2000 + Math.random() * 5000
 }
 

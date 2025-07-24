@@ -46,7 +46,8 @@
       "WebFetch(domain:tabletalkradar.com)",
       "Bash(chmod:*)",
       "Bash(npx supabase:*)",
-      "Bash(./deploy.sh:*)"
+      "Bash(./deploy.sh:*)",
+      "Bash(./refactor.sh)"
     ],
     "deny": []
   }

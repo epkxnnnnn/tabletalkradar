@@ -74,6 +74,50 @@ export const kimiClient = {
   }
 }
 
+// Qwen3 API (Alibaba Cloud)
+export const qwen3Client = {
+  apiKey: process.env.QWEN3_API_KEY!,
+  baseURL: 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
+  
+  async chat(messages: Array<{role: string, content: string}>, model = 'qwen2.5-72b-instruct') {
+    const response = await fetch(this.baseURL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+        'X-DashScope-SSE': 'disable'
+      },
+      body: JSON.stringify({
+        model,
+        input: {
+          messages: messages.map(msg => ({
+            role: msg.role,
+            content: msg.content
+          }))
+        },
+        parameters: {
+          temperature: 0.1,
+          max_tokens: 2000,
+          top_p: 0.9
+        }
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Qwen3 API error: ${response.statusText}`)
+    }
+    
+    const data = await response.json()
+    return {
+      choices: [{
+        message: {
+          content: data.output?.text || data.output?.choices?.[0]?.message?.content || 'No response'
+        }
+      }]
+    }
+  }
+}
+
 // AI Analysis Functions
 export const aiAnalysis = {
   // Perplexity - Market Research & Competitor Analysis

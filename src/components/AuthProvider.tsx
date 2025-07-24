@@ -22,42 +22,43 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false) // Don't block initial render
   const [profile, setProfile] = useState<any | null>(null)
 
   useEffect(() => {
-    // Set a timeout to prevent infinite loading
-    const timeout = setTimeout(() => {
-      console.log('Auth timeout - setting loading to false')
-      setLoading(false)
-    }, 5000)
+    let mounted = true
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      clearTimeout(timeout)
-      if (error) {
-        console.error('Auth session error:', error)
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (!mounted) return
+        
+        if (error) {
+          console.error('Auth session error:', error)
+        } else {
+          setSession(session)
+          setUser(session?.user ?? null)
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error)
       }
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
-    }).catch((error) => {
-      clearTimeout(timeout)
-      console.error('Auth initialization error:', error)
-      setLoading(false)
-    })
+    }
+
+    initializeAuth()
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return
       setSession(session)
       setUser(session?.user ?? null)
-      setLoading(false)
     })
 
     return () => {
-      clearTimeout(timeout)
+      mounted = false
       subscription.unsubscribe()
     }
   }, [])
