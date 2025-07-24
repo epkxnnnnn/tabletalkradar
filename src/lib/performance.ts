@@ -22,12 +22,14 @@ export function withLazy<T extends ComponentType<any>>(
   
   if (fallback) {
     const FallbackComponent = fallback
-    return (props: any) => 
+    const WithFallback = (props: any) => 
       React.createElement(
         Suspense,
         { fallback: React.createElement(FallbackComponent) },
         React.createElement(LazyComponent, props)
       )
+    WithFallback.displayName = `withFallback(${LazyComponent.displayName || 'Component'})`
+    return WithFallback
   }
   
   return LazyComponent as ComponentType<any>
