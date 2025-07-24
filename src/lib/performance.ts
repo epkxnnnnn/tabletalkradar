@@ -28,7 +28,7 @@ export function withLazy<T extends ComponentType<any>>(
         { fallback: React.createElement(FallbackComponent) },
         React.createElement(LazyComponent, props)
       )
-    WithFallback.displayName = `withFallback(${LazyComponent.displayName || 'Component'})`
+    WithFallback.displayName = `withFallback(${(LazyComponent as any).displayName || 'Component'})`
     return WithFallback
   }
   

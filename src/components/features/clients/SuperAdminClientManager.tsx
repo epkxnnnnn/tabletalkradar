@@ -126,11 +126,11 @@ export default function SuperAdminClientManager() {
           .eq('status', 'active')
 
         if (!userError && userData) {
-          const users = userData.map(membership => ({
-            id: membership.profiles.id,
-            email: membership.profiles.email,
+          const users = userData.map((membership: any) => ({
+            id: membership.profiles?.id || '',
+            email: membership.profiles?.email || '',
             role: membership.role,
-            created_at: membership.profiles.created_at
+            created_at: membership.profiles?.created_at || ''
           }))
           setAgencyUsers(users)
         }

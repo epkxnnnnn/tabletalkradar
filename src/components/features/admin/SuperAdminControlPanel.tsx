@@ -152,7 +152,7 @@ export default function SuperAdminControlPanel() {
         alert(`Error: ${result.error}`)
       }
     } catch (error) {
-      alert(`Error executing override: ${error.message}`)
+      alert(`Error executing override: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 
@@ -172,7 +172,7 @@ export default function SuperAdminControlPanel() {
         alert(`Error: ${error.error}`)
       }
     } catch (error) {
-      alert(`Error revoking session: ${error.message}`)
+      alert(`Error revoking session: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 
@@ -192,7 +192,7 @@ export default function SuperAdminControlPanel() {
         alert(`Error: ${error.error}`)
       }
     } catch (error) {
-      alert(`Error revoking override: ${error.message}`)
+      alert(`Error revoking override: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 

@@ -137,7 +137,9 @@
       "Bash(./setup-mcp.sh:*)",
       "Bash(npm search:*)",
       "Bash(psql:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(npm run lint:*)",
+      "Bash(echo \"EXIT CODE: $?\")"
     ],
     "deny": []
   }

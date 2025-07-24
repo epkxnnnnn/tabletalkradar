@@ -20,8 +20,11 @@ const OverrideActionSchema = z.object({
   target_agency_id: z.string().uuid().optional(),
   override_data: z.record(z.any()).optional(),
   reason: z.string().min(10, 'Reason must be at least 10 characters'),
-  emergency: z.boolean().default(false)
-})
+  emergency: z.boolean()
+}).transform(data => ({
+  ...data,
+  emergency: data.emergency ?? false
+}))
 
 // Helper to get authenticated super admin
 async function getAuthenticatedSuperAdmin() {
@@ -90,7 +93,7 @@ export const POST = withMethods(['POST'])(
     async (req: NextRequest, data: z.infer<typeof OverrideActionSchema>) => {
       const { user, supabase } = await getAuthenticatedSuperAdmin()
       
-      const { action, target_user_id, target_client_id, target_agency_id, override_data, reason, emergency = false } = data
+      const { action, target_user_id, target_client_id, target_agency_id, override_data, reason, emergency } = data
       
       let result: any = {}
       
@@ -235,7 +238,7 @@ export const POST = withMethods(['POST'])(
           supabase,
           user.id,
           `${action}_FAILED`,
-          { reason, emergency, error: error.message },
+          { reason, emergency, error: error instanceof Error ? error.message : String(error) },
           target_user_id,
           target_client_id,
           target_agency_id
