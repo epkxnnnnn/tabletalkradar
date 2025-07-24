@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '../../providers/AuthProvider'
+import { useSimpleAgency as useAgency } from '../../providers/SimpleAgencyProvider'
+import GoogleBusinessIntegration from './GoogleBusinessIntegration'
 
 interface Integration {
   id: string
@@ -60,16 +62,90 @@ const availableIntegrations: Omit<Integration, 'id' | 'status' | 'last_sync'>[] 
   }
 ]
 
+interface Client {
+  id: string
+  business_name: string
+  website: string | null
+  category: string
+  status: string
+}
+
 export default function IntegrationsManager() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
+  const { currentAgency, membership } = useAgency()
+  const [clients, setClients] = useState<Client[]>([])
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [integrations, setIntegrations] = useState<Integration[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null)
   const [settings, setSettings] = useState<any>({})
+  const [successMessage, setSuccessMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
-    loadIntegrations()
-  }, [])
+    if (user) {
+      loadClients()
+      loadIntegrations()
+      handleCallbackMessages()
+    }
+  }, [user, currentAgency])
+
+  useEffect(() => {
+    if (clients.length > 0 && !selectedClient) {
+      setSelectedClient(clients[0])
+    }
+  }, [clients, selectedClient])
+
+  const loadClients = async () => {
+    setLoading(true)
+    try {
+      let query = supabase
+        .from('clients')
+        .select('id, business_name, website, category, status')
+        .eq('status', 'active')
+        .order('business_name')
+
+      // Filter by agency if user is not super admin
+      if (currentAgency && profile?.role !== 'superadmin') {
+        query = query.eq('agency_id', currentAgency.id)
+      } else if (profile?.role !== 'superadmin') {
+        query = query.eq('user_id', user?.id)
+      }
+
+      const { data, error } = await query
+
+      if (error) throw error
+
+      setClients(data || [])
+    } catch (error) {
+      console.error('Error loading clients:', error)
+      setErrorMessage('Failed to load clients')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCallbackMessages = () => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const success = urlParams.get('success')
+    const error = urlParams.get('error')
+    const account = urlParams.get('account')
+
+    if (success === 'google_connected') {
+      setSuccessMessage(`Successfully connected Google Business Profile${account ? ` for ${decodeURIComponent(account)}` : ''}`)
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname)
+    } else if (error) {
+      const errorMessages = {
+        oauth_denied: 'Google OAuth was cancelled or denied',
+        invalid_callback: 'Invalid callback parameters',
+        connection_failed: 'Failed to establish connection with Google Business Profile'
+      }
+      setErrorMessage(errorMessages[error as keyof typeof errorMessages] || 'Connection failed')
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+  }
 
   const loadIntegrations = async () => {
     try {
@@ -169,175 +245,188 @@ export default function IntegrationsManager() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-white">Loading integrations...</div>
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-white text-lg">Loading integrations...</div>
+      </div>
+    )
+  }
+
+  if (clients.length === 0) {
+    return (
+      <div className="min-h-screen bg-slate-900 p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-slate-800 rounded-lg p-12 text-center">
+            <div className="text-4xl mb-4">🔌</div>
+            <h3 className="text-lg font-medium text-white mb-2">No Active Clients</h3>
+            <p className="text-slate-400 mb-4">
+              You need to have active clients before setting up integrations.
+            </p>
+            <a
+              href="/dashboard"
+              className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-md inline-block"
+            >
+              Go to Dashboard
+            </a>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-white">Integrations</h1>
-        <div className="text-sm text-gray-400">
-          Connect your business accounts to sync data automatically
+    <div className="min-h-screen bg-slate-900">
+      {/* Header */}
+      <div className="bg-slate-800 border-b border-slate-700 px-6 py-4">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Integrations</h1>
+            <p className="text-slate-400">
+              Connect third-party services to enhance your business management
+            </p>
+          </div>
+        </div>
+
+        {/* Success/Error Messages */}
+        {successMessage && (
+          <div className="bg-green-900/20 border border-green-500 text-green-400 px-4 py-2 rounded-lg mb-4">
+            {successMessage}
+            <button
+              onClick={() => setSuccessMessage('')}
+              className="float-right text-green-300 hover:text-green-100"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {errorMessage && (
+          <div className="bg-red-900/20 border border-red-500 text-red-400 px-4 py-2 rounded-lg mb-4">
+            {errorMessage}
+            <button
+              onClick={() => setErrorMessage('')}
+              className="float-right text-red-300 hover:text-red-100"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Client Selector */}
+        <div className="max-w-md">
+          <label className="block text-sm font-medium text-slate-300 mb-2">
+            Select Client
+          </label>
+          <select
+            value={selectedClient?.id || ''}
+            onChange={(e) => {
+              const client = clients.find(c => c.id === e.target.value)
+              setSelectedClient(client || null)
+            }}
+            className="w-full bg-slate-700 text-white px-4 py-2 rounded-lg border border-slate-600 focus:border-red-500 focus:outline-none"
+          >
+            {clients.map((client) => (
+              <option key={client.id} value={client.id}>
+                {client.business_name} ({client.category})
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {integrations.map((integration) => (
-          <div key={integration.id} className="bg-slate-800 p-6 rounded-lg">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <div className="text-3xl">{integration.icon}</div>
-                <div>
-                  <h3 className="text-lg font-semibold text-white">{integration.name}</h3>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <span className="text-lg">{getStatusIcon(integration.status)}</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium text-white ${getStatusColor(integration.status)}`}>
-                      {integration.status}
+      {/* Integrations Content */}
+      <div className="p-6">
+        <div className="max-w-4xl mx-auto">
+          {selectedClient ? (
+            <div>
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-white mb-2">
+                  Integrations for {selectedClient.business_name}
+                </h2>
+                <p className="text-slate-400">
+                  Configure and manage third-party service connections for this client.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Google Business Profile Integration */}
+                <GoogleBusinessIntegration
+                  clientId={selectedClient.id}
+                  clientName={selectedClient.business_name}
+                />
+
+                {/* Legacy integrations converted to placeholders */}
+                <div className="bg-slate-800 rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-blue-700 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold">f</span>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Facebook Business</h3>
+                        <p className="text-slate-400 text-sm">Manage Facebook pages and ads</p>
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 bg-slate-700 text-slate-300 rounded-full text-sm">
+                      Coming Soon
                     </span>
+                  </div>
+                  <div className="text-slate-400 text-sm">
+                    Facebook Business integration will be available in a future update.
+                  </div>
+                </div>
+
+                <div className="bg-slate-800 rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold">📷</span>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Instagram Business</h3>
+                        <p className="text-slate-400 text-sm">Manage Instagram posts and stories</p>
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 bg-slate-700 text-slate-300 rounded-full text-sm">
+                      Coming Soon
+                    </span>
+                  </div>
+                  <div className="text-slate-400 text-sm">
+                    Instagram Business integration will be available in a future update.
+                  </div>
+                </div>
+
+                <div className="bg-slate-800 rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold">🐦</span>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Twitter/X Business</h3>
+                        <p className="text-slate-400 text-sm">Manage tweets and engagement</p>
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 bg-slate-700 text-slate-300 rounded-full text-sm">
+                      Coming Soon
+                    </span>
+                  </div>
+                  <div className="text-slate-400 text-sm">
+                    Twitter/X Business integration will be available in a future update.
                   </div>
                 </div>
               </div>
             </div>
-
-            <p className="text-gray-300 text-sm mb-4 leading-relaxed">
-              {integration.description}
-            </p>
-
-            {integration.last_sync && (
-              <p className="text-gray-400 text-xs mb-4">
-                Last synced: {new Date(integration.last_sync).toLocaleDateString()}
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-4xl mb-4">🔌</div>
+              <h3 className="text-lg font-medium text-white mb-2">Select a Client</h3>
+              <p className="text-slate-400">
+                Choose a client from the dropdown above to manage their integrations.
               </p>
-            )}
-
-            <div className="flex space-x-2">
-              {integration.status === 'disconnected' ? (
-                <button
-                  onClick={() => {
-                    setSelectedIntegration(integration)
-                    setSettings(integration.settings || {})
-                  }}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition-colors flex-1"
-                >
-                  Connect
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={() => handleSync(integration.id)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm transition-colors"
-                  >
-                    Sync
-                  </button>
-                  <button
-                    onClick={() => handleDisconnect(integration.id)}
-                    className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg text-sm transition-colors"
-                  >
-                    Disconnect
-                  </button>
-                </>
-              )}
             </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Connection Modal */}
-      {selectedIntegration && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 p-6 rounded-lg max-w-md w-full mx-4">
-            <h2 className="text-xl font-semibold text-white mb-4">
-              Connect {selectedIntegration.name}
-            </h2>
-            
-            <div className="space-y-4">
-              {selectedIntegration.type === 'google_business' && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Location ID
-                    </label>
-                    <input
-                      type="text"
-                      value={settings.location_id || ''}
-                      onChange={(e) => setSettings({...settings, location_id: e.target.value})}
-                      className="w-full px-3 py-2 bg-slate-700 text-white rounded-lg border border-slate-600 focus:border-red-500 focus:outline-none"
-                      placeholder="Enter your Google Business location ID"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      API Key
-                    </label>
-                    <input
-                      type="password"
-                      value={settings.api_key || ''}
-                      onChange={(e) => setSettings({...settings, api_key: e.target.value})}
-                      className="w-full px-3 py-2 bg-slate-700 text-white rounded-lg border border-slate-600 focus:border-red-500 focus:outline-none"
-                      placeholder="Enter your API key"
-                    />
-                  </div>
-                </>
-              )}
-
-              {selectedIntegration.type === 'facebook' && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Page ID
-                    </label>
-                    <input
-                      type="text"
-                      value={settings.page_id || ''}
-                      onChange={(e) => setSettings({...settings, page_id: e.target.value})}
-                      className="w-full px-3 py-2 bg-slate-700 text-white rounded-lg border border-slate-600 focus:border-red-500 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Access Token
-                    </label>
-                    <input
-                      type="password"
-                      value={settings.access_token || ''}
-                      onChange={(e) => setSettings({...settings, access_token: e.target.value})}
-                      className="w-full px-3 py-2 bg-slate-700 text-white rounded-lg border border-slate-600 focus:border-red-500 focus:outline-none"
-                    />
-                  </div>
-                </>
-              )}
-
-              {/* Add similar forms for other integration types */}
-              {!['google_business', 'facebook'].includes(selectedIntegration.type) && (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-2">{selectedIntegration.icon}</div>
-                  <p className="text-gray-400">Integration settings coming soon...</p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex space-x-3 mt-6">
-              <button
-                onClick={() => handleConnect(selectedIntegration)}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors flex-1"
-              >
-                Connect
-              </button>
-              <button
-                onClick={() => {
-                  setSelectedIntegration(null)
-                  setSettings({})
-                }}
-                className="bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   )
 }
