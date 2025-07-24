@@ -1,198 +1,111 @@
-import { logger } from './logger'
+// TableTalk Radar - Performance Optimization Utilities
+import React, { lazy, memo, ComponentType, Suspense } from 'react'
 
-interface CacheEntry<T> {
-  data: T
-  timestamp: number
-  ttl: number
+// React Performance Optimization Helpers
+
+// Generic memo wrapper with display name preservation
+export function withMemo<T extends ComponentType<any>>(
+  Component: T,
+  propsAreEqual?: (prevProps: any, nextProps: any) => boolean
+): ComponentType<any> {
+  const MemoizedComponent = memo(Component, propsAreEqual)
+  MemoizedComponent.displayName = `Memo(${Component.displayName || Component.name})`
+  return MemoizedComponent
 }
 
-class Cache {
-  private cache = new Map<string, CacheEntry<any>>()
-  private readonly defaultTtl: number
-
-  constructor(defaultTtl: number = 3600) {
-    this.defaultTtl = defaultTtl
-    this.startCleanupInterval()
+// Lazy loading wrapper with error boundary
+export function withLazy<T extends ComponentType<any>>(
+  importFunc: () => Promise<{ default: T }>,
+  fallback?: React.ComponentType
+): ComponentType<any> {
+  const LazyComponent = lazy(importFunc)
+  
+  if (fallback) {
+    const FallbackComponent = fallback
+    return (props: any) => 
+      React.createElement(
+        Suspense,
+        { fallback: React.createElement(FallbackComponent) },
+        React.createElement(LazyComponent, props)
+      )
   }
-
-  set<T>(key: string, data: T, ttl?: number): void {
-    const entry: CacheEntry<T> = {
-      data,
-      timestamp: Date.now(),
-      ttl: ttl || this.defaultTtl
-    }
-    this.cache.set(key, entry)
-  }
-
-  get<T>(key: string): T | null {
-    const entry = this.cache.get(key)
-    if (!entry) return null
-
-    const now = Date.now()
-    const age = now - entry.timestamp
-
-    if (age > entry.ttl * 1000) {
-      this.cache.delete(key)
-      return null
-    }
-
-    return entry.data
-  }
-
-  delete(key: string): void {
-    this.cache.delete(key)
-  }
-
-  clear(): void {
-    this.cache.clear()
-  }
-
-  private startCleanupInterval(): void {
-    setInterval(() => {
-      const now = Date.now()
-      let cleanedCount = 0
-
-      for (const [key, entry] of Array.from(this.cache.entries())) {
-        const age = now - entry.timestamp
-        if (age > entry.ttl * 1000) {
-          this.cache.delete(key)
-          cleanedCount++
-        }
-      }
-
-      if (cleanedCount > 0) {
-        logger.debug(`Cache cleanup: removed ${cleanedCount} expired entries`)
-      }
-    }, 60000) // Run every minute
-  }
+  
+  return LazyComponent as ComponentType<any>
 }
 
-export const cache = new Cache()
-
-// Performance monitoring
-export class PerformanceMonitor {
-  private metrics: Map<string, number[]> = new Map()
-
-  startTimer(label: string): () => void {
-    const start = performance.now()
-    return () => {
-      const duration = performance.now() - start
-      this.recordMetric(label, duration)
-    }
-  }
-
-  recordMetric(label: string, value: number): void {
-    if (!this.metrics.has(label)) {
-      this.metrics.set(label, [])
-    }
-    this.metrics.get(label)!.push(value)
-  }
-
-  getMetrics(label: string): { avg: number; min: number; max: number; count: number } {
-    const values = this.metrics.get(label) || []
-    if (values.length === 0) {
-      return { avg: 0, min: 0, max: 0, count: 0 }
-    }
-
-    const sum = values.reduce((a, b) => a + b, 0)
-    const avg = sum / values.length
-    const min = Math.min(...values)
-    const max = Math.max(...values)
-
-    return { avg, min, max, count: values.length }
-  }
-
-  clearMetrics(label?: string): void {
-    if (label) {
-      this.metrics.delete(label)
-    } else {
-      this.metrics.clear()
-    }
-  }
-}
-
-export const performanceMonitor = new PerformanceMonitor()
-
-// Database query optimization
-export class QueryOptimizer {
-  private queryCache = new Map<string, { result: any; timestamp: number }>()
-
-  async executeWithCache<T>(
-    key: string,
-    queryFn: () => Promise<T>,
-    ttl: number = 300 // 5 minutes default
-  ): Promise<T> {
-    const cached = this.queryCache.get(key)
-    if (cached && Date.now() - cached.timestamp < ttl * 1000) {
-      logger.debug(`Cache hit for query: ${key}`)
-      return cached.result
-    }
-
-    const stopTimer = performanceMonitor.startTimer(`query_${key}`)
-    const result = await queryFn()
-    stopTimer()
-
-    this.queryCache.set(key, {
-      result,
-      timestamp: Date.now()
-    })
-
-    logger.debug(`Cache miss for query: ${key}`)
-    return result
-  }
-
-  invalidateCache(pattern?: string): void {
-    if (pattern) {
-      for (const key of Array.from(this.queryCache.keys())) {
-        if (key.includes(pattern)) {
-          this.queryCache.delete(key)
-        }
-      }
-    } else {
-      this.queryCache.clear()
-    }
-  }
-}
-
-export const queryOptimizer = new QueryOptimizer()
-
-// Memory usage monitoring
-export function getMemoryUsage(): { used: number; total: number; percentage: number } {
-  if (typeof process !== 'undefined' && process.memoryUsage) {
-    const usage = process.memoryUsage()
-    const used = Math.round(usage.heapUsed / 1024 / 1024)
-    const total = Math.round(usage.heapTotal / 1024 / 1024)
-    const percentage = Math.round((used / total) * 100)
-
-    return { used, total, percentage }
-  }
-
-  return { used: 0, total: 0, percentage: 0 }
-}
-
-// Debounce utility for performance
+// Debounce utility for expensive operations  
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
-  wait: number
+  delay: number
 ): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout
+  let timeoutId: NodeJS.Timeout
+  
   return (...args: Parameters<T>) => {
-    clearTimeout(timeout)
-    timeout = setTimeout(() => func(...args), wait)
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => func(...args), delay)
   }
 }
 
-// Throttle utility for performance
+// Throttle utility for frequent events
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {
   let inThrottle: boolean
+  
   return (...args: Parameters<T>) => {
     if (!inThrottle) {
       func(...args)
       inThrottle = true
-      setTimeout(() => (inThrottle = false), limit)
+      setTimeout(() => inThrottle = false, limit)
     }
   }
-} 
+}
+
+// Virtual scrolling helper for large lists
+export function getVisibleItems<T>(
+  items: T[],
+  scrollTop: number,
+  containerHeight: number,
+  itemHeight: number,
+  buffer = 5
+) {
+  const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - buffer)
+  const endIndex = Math.min(
+    items.length - 1,
+    Math.ceil((scrollTop + containerHeight) / itemHeight) + buffer
+  )
+  
+  return {
+    startIndex,
+    endIndex,
+    visibleItems: items.slice(startIndex, endIndex + 1),
+    totalHeight: items.length * itemHeight,
+    offsetY: startIndex * itemHeight
+  }
+}
+
+// Performance measurement utilities
+export class PerformanceTracker {
+  private static marks: Map<string, number> = new Map()
+  
+  static mark(name: string) {
+    this.marks.set(name, performance.now())
+  }
+  
+  static measure(name: string, startMark?: string): number {
+    const endTime = performance.now()
+    const startTime = startMark ? this.marks.get(startMark) || 0 : 0
+    const duration = endTime - startTime
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`⏱️ ${name}: ${duration.toFixed(2)}ms`)
+    }
+    
+    return duration
+  }
+  
+  static clearMarks() {
+    this.marks.clear()
+  }
+}

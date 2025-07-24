@@ -1,5 +1,5 @@
 import { logger } from './logger'
-import { performanceMonitor } from './performance'
+import { PerformanceTracker } from './performance'
 import * as Sentry from '@sentry/nextjs'
 
 interface Metric {

@@ -92,5 +92,16 @@ dist
 
 # Temporary folders
 tmp/
-temp/.env.production
-.env.production
+temp/
+
+# MCP and sensitive config files
+.env.mcp
+*mcp-config.json
+*.sh
+
+# Database scripts and migration files
+database/*.sql
+*.sql
+run-admin-migration.js
+supabase-migration.js
+supabase-sql-to-run.sql

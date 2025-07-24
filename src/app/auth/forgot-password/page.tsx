@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useAuth } from '@/components/AuthProvider'
+import { useAuth } from '@/components/providers/AuthProvider'
 import Link from 'next/link'
 
 export default function ForgotPasswordPage() {

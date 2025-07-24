@@ -1,8 +1,8 @@
 'use client'
 
-import { ClientProvider } from '@/components/ClientProvider'
-import { AuthProvider } from '@/components/AuthProvider'
-import ClientDashboard from '@/components/ClientDashboard'
+import { ClientProvider } from '@/components/features/clients/ClientProvider'
+import { AuthProvider } from '@/components/providers/AuthProvider'
+import ClientDashboard from '@/components/features/clients/ClientDashboard'
 
 export default function ClientDashboardPage() {
   return (

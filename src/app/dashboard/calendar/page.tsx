@@ -1,4 +1,4 @@
-import CalendarManager from '@/components/CalendarManager'
+import CalendarManager from '@/components/features/calendar/CalendarManager'
 
 export default function CalendarPage() {
   return <CalendarManager />
