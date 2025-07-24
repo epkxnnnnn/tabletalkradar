@@ -45,7 +45,8 @@
       "WebFetch(domain:tabletalk-g6myb5sim-reppro.vercel.app)",
       "WebFetch(domain:tabletalkradar.com)",
       "Bash(chmod:*)",
-      "Bash(npx supabase:*)"
+      "Bash(npx supabase:*)",
+      "Bash(./deploy.sh:*)"
     ],
     "deny": []
   }
