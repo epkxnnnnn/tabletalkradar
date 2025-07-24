@@ -90,7 +90,7 @@ export const POST = withMethods(['POST'])(
     async (req: NextRequest, data: z.infer<typeof OverrideActionSchema>) => {
       const { user, supabase } = await getAuthenticatedSuperAdmin()
       
-      const { action, target_user_id, target_client_id, target_agency_id, override_data, reason, emergency } = data
+      const { action, target_user_id, target_client_id, target_agency_id, override_data, reason, emergency = false } = data
       
       let result: any = {}
       
