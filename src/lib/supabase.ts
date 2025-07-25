@@ -1,3 +1,5 @@
+'use client';
+
 import { createClient } from '@supabase/supabase-js';
 
 // Environment variables
@@ -9,11 +11,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase URL or Anon Key in environment variables.');
 }
 
-// Initialize Supabase client
+// Initialize Supabase client with SSR-safe configuration
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    autoRefreshToken: true,
-    persistSession: true,
+    autoRefreshToken: typeof window !== 'undefined',
+    persistSession: typeof window !== 'undefined',
   },
 });
 

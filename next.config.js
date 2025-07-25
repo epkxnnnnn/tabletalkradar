@@ -1,13 +1,18 @@
+// Load server polyfills FIRST
+import './server-polyfill.js';
+
 import { withSentryConfig } from '@sentry/nextjs';
 import path from 'path';
 import webpack from 'webpack';
-import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
-import './src/lib/polyfills.js';
+import { fileURLToPath } from 'url';
+
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ['@supabase/supabase-js', '@sentry/nextjs'],
-  swcMinify: false,
+  serverExternalPackages: ['@supabase/supabase-js', '@supabase/ssr', '@sentry/nextjs'],
   
   eslint: {
     // Disable ESLint during builds for faster deployment
@@ -70,64 +75,25 @@ const nextConfig = {
   transpilePackages: [],
   
   webpack: (config, { isServer, dev }) => {
-    // Fix 'self is not defined' error for server-side rendering
+    // Fix for libraries that use 'self' and other browser globals
     if (isServer) {
-      // Provide global polyfills for server
+      // Simple global definitions
       config.plugins.push(
         new webpack.DefinePlugin({
-          self: 'global',
-          window: 'global',
+          'self': 'global',
         })
       );
-      
-      // Add node polyfills
-      config.plugins.push(new NodePolyfillPlugin({
-        excludeAliases: ['console']
-      }));
-      
-      // Add fallbacks for browser-specific modules
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        crypto: false,
-        stream: false,
-        buffer: false,
-      };
     }
     
-    // Optimize webpack cache
+    // Disable aggressive caching and optimization that causes runtime errors
     if (!dev) {
-      config.cache = {
-        type: 'filesystem',
-        cacheDirectory: path.join(process.cwd(), '.next/cache/webpack'),
-        maxMemoryGenerations: 1,
-        maxAge: 1000 * 60 * 60 * 24, // 1 day
-      };
+      config.cache = false; // Disable filesystem caching to prevent runtime errors
     }
     
-    // Reduce bundle size
+    // Minimal splitChunks to prevent webpack runtime undefined array access
     config.optimization = {
       ...config.optimization,
-      splitChunks: {
-        chunks: 'all',
-        cacheGroups: {
-          default: false,
-          vendors: false,
-          vendor: {
-            name: 'vendor',
-            chunks: 'all',
-            test: /[\\/]node_modules[\\/]/,
-            priority: 20,
-          },
-          common: {
-            name: 'common',
-            minChunks: 2,
-            chunks: 'all',
-            priority: 10,
-            reuseExistingChunk: true,
-            enforce: true,
-          },
-        },
-      },
+      splitChunks: false, // Disable splitChunks completely to prevent runtime errors
     };
     
     if (!isServer) {

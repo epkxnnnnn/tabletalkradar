@@ -139,7 +139,14 @@
       "Bash(psql:*)",
       "Bash(rm:*)",
       "Bash(npm run lint:*)",
-      "Bash(echo \"EXIT CODE: $?\")"
+      "Bash(echo \"EXIT CODE: $?\")",
+      "Bash(git clone:*)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "Bash(claude --version)",
+      "Bash(if [ -z \"$SUPABASE_DB_PASSWORD\" ])",
+      "Bash(then echo \"SUPABASE_DB_PASSWORD is not set\")",
+      "Bash(else echo \"SUPABASE_DB_PASSWORD is set\")",
+      "Bash(fi)"
     ],
     "deny": []
   }
