@@ -1,12 +1,17 @@
 {
   "root": true,
   "extends": ["eslint:recommended"],
+  "plugins": ["@next/next"],
   "rules": {
     "prefer-const": "error",
     "no-var": "error",
     "no-unused-vars": "warn",
     "no-console": "off",
-    "no-case-declarations": "error"
+    "no-case-declarations": "error",
+    "@next/next/no-img-element": "warn",
+    "@next/next/no-page-custom-font": "warn",
+    "@next/next/no-css-tags": "error",
+    "@next/next/no-sync-scripts": "error"
   },
   "ignorePatterns": [
     "node_modules/",
@@ -22,20 +27,35 @@
   },
   "parserOptions": {
     "ecmaVersion": "latest",
-    "sourceType": "module"
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    },
+    "next": {
+      "rootDir": "."
+    }
   },
   "overrides": [
     {
       "files": ["*.ts", "*.tsx"],
       "parser": "@typescript-eslint/parser",
-      "plugins": ["@typescript-eslint"],
+      "plugins": ["@typescript-eslint", "@next/next"],
       "extends": [
         "eslint:recommended"
       ],
       "rules": {
         "no-unused-vars": "off",
         "@typescript-eslint/no-unused-vars": "warn",
-        "@typescript-eslint/no-explicit-any": "off"
+        "@typescript-eslint/no-explicit-any": "off",
+        "@next/next/no-img-element": "warn",
+        "@next/next/no-page-custom-font": "warn",
+        "@next/next/no-css-tags": "error",
+        "@next/next/no-sync-scripts": "error"
       }
     }
   ]
