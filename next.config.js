@@ -1,11 +1,13 @@
 import { withSentryConfig } from '@sentry/nextjs';
 import path from 'path';
 import webpack from 'webpack';
+import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
 import './src/lib/polyfills.js';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   serverExternalPackages: ['@supabase/supabase-js', '@sentry/nextjs'],
+  swcMinify: false,
   
   eslint: {
     // Disable ESLint during builds for faster deployment
@@ -70,17 +72,26 @@ const nextConfig = {
   webpack: (config, { isServer, dev }) => {
     // Fix 'self is not defined' error for server-side rendering
     if (isServer) {
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        'self': false,
-      };
-      
       // Provide global polyfills for server
       config.plugins.push(
         new webpack.DefinePlugin({
           self: 'global',
+          window: 'global',
         })
       );
+      
+      // Add node polyfills
+      config.plugins.push(new NodePolyfillPlugin({
+        excludeAliases: ['console']
+      }));
+      
+      // Add fallbacks for browser-specific modules
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        crypto: false,
+        stream: false,
+        buffer: false,
+      };
     }
     
     // Optimize webpack cache
