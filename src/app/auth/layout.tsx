@@ -1,9 +1,9 @@
 'use client'
 
+import React, { useEffect } from 'react'
 import { AuthProvider } from '@/components/providers/AuthProvider'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
 
 function AuthLayout({ children }: { children: React.ReactNode }) {
   return (

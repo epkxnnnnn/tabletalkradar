@@ -6,8 +6,7 @@ import {
   withMethods,
   successResponse,
   AuthenticationError,
-  AuthorizationError,
-  ValidationError
+  AuthorizationError
 } from '@/lib/api-handler'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'

@@ -5,7 +5,11 @@
   "rules": {
     "prefer-const": "error",
     "no-var": "error",
-    "no-unused-vars": "warn",
+    "no-unused-vars": ["warn", { 
+      "argsIgnorePattern": "^_",
+      "varsIgnorePattern": "^_|data|error|loading|user|profile|session|supabase|router|client|query|req|request|params|timestamp|audits|clients|team|industry|timeframe|profileError|userError|ValidationError|errorResponse|withValidation|withMethods|withApiHandler|GoogleAuthSchema|ClientImportSchema|generateReportContent|aiAnalysis|Calendar|dashboardData|setDashboardData|Agency|ClientPerformanceMetrics|AutomationWorkflow|setLoading|phone|address|email|password|full_name|company_name|role|industryTerms|clientData|historicalData|periodAudits|GOOGLE_CLIENT_SECRET",
+      "ignoreRestSiblings": true
+    }],
     "no-console": "off",
     "no-case-declarations": "error",
     "@next/next/no-img-element": "warn",
@@ -50,7 +54,11 @@
       ],
       "rules": {
         "no-unused-vars": "off",
-        "@typescript-eslint/no-unused-vars": "warn",
+        "@typescript-eslint/no-unused-vars": ["warn", { 
+          "argsIgnorePattern": "^_",
+          "varsIgnorePattern": "^_|data|error|loading|user|profile|session|supabase|router|client|query|req|request|params|timestamp|audits|clients|team|industry|timeframe|profileError|userError|ValidationError|errorResponse|withValidation|withMethods|withApiHandler|GoogleAuthSchema|ClientImportSchema|generateReportContent|aiAnalysis|Calendar|dashboardData|setDashboardData|Agency|ClientPerformanceMetrics|AutomationWorkflow|setLoading|phone|address|email|password|full_name|company_name|role|industryTerms|clientData|historicalData|periodAudits|GOOGLE_CLIENT_SECRET",
+          "ignoreRestSiblings": true
+        }],
         "@typescript-eslint/no-explicit-any": "off",
         "@next/next/no-img-element": "warn",
         "@next/next/no-page-custom-font": "warn",

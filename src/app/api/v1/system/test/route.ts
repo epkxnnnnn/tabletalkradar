@@ -15,8 +15,8 @@ export async function GET() {
   }
 
   const missingKeys = Object.entries(envCheck)
-    .filter(([_, value]) => !value)
-    .map(([key, _]) => key)
+    .filter(([_key, value]) => !value)
+    .map(([key, _value]) => key)
 
   return NextResponse.json({
     status: missingKeys.length === 0 ? 'OK' : 'MISSING_ENV_VARS',
