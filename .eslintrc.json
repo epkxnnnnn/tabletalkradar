@@ -1,8 +1,42 @@
 {
-  "extends": ["next/core-web-vitals"],
+  "root": true,
+  "extends": ["eslint:recommended"],
   "rules": {
     "prefer-const": "error",
-    "no-var": "error"
+    "no-var": "error",
+    "no-unused-vars": "warn",
+    "no-console": "off",
+    "no-case-declarations": "error"
   },
-  "ignorePatterns": ["node_modules/", ".next/", "out/"]
+  "ignorePatterns": [
+    "node_modules/",
+    ".next/",
+    "out/",
+    "dist/",
+    "build/"
+  ],
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx"],
+      "parser": "@typescript-eslint/parser",
+      "plugins": ["@typescript-eslint"],
+      "extends": [
+        "eslint:recommended"
+      ],
+      "rules": {
+        "no-unused-vars": "off",
+        "@typescript-eslint/no-unused-vars": "warn",
+        "@typescript-eslint/no-explicit-any": "off"
+      }
+    }
+  ]
 }

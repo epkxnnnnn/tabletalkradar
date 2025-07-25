@@ -99,7 +99,7 @@ export const POST = withMethods(['POST'])(
       
       try {
         switch (action) {
-          case 'impersonate_user':
+          case 'impersonate_user': {
             if (!target_user_id) {
               throw new Error('target_user_id required for impersonate_user action')
             }
@@ -120,8 +120,9 @@ export const POST = withMethods(['POST'])(
             
             result = { impersonation_token: impersonationToken, expires_in: 4 * 60 * 60 * 1000 }
             break
+          }
             
-          case 'override_permissions':
+          case 'override_permissions': {
             if (!target_user_id) {
               throw new Error('target_user_id required for override_permissions action')
             }
@@ -143,6 +144,7 @@ export const POST = withMethods(['POST'])(
             
             result = { override_id: overrideId, permissions: override_data }
             break
+          }
             
           case 'force_action':
             // Execute forced actions on behalf of users/clients
