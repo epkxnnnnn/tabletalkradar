@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { logger } from '@/lib/logger'
-import { createSupabaseClient } from '@/lib/supabase-client';
+import { supabase } from '@/lib/supabase-client';
 
 async function getUserRole(supabase: any, userId: string) {
   const { data: profile } = await supabase
@@ -27,10 +27,11 @@ export async function GET(request: NextRequest) {
         },
       }
     )
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const { data: { session }, error: authError } = await supabase.auth.getSession()
+    if (authError || !session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const user = session.user
     const userRole = await getUserRole(supabase, user.id)
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
@@ -57,15 +58,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createSupabaseClient()
-    if (!supabase) {
-      return NextResponse.json({ error: 'Supabase client not initialized' }, { status: 500 });
-    }
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    
-    if (sessionError || !session) {
+    if (sessionError || !session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const user = session.user
 
     const body = await request.json()
     const { audit_id, title, description, priority, due_date } = body
@@ -74,13 +71,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 })
     }
 
-    if (!supabase) {
-      return NextResponse.json({ error: 'Supabase client not initialized' }, { status: 500 });
-    }
     const { data: actionItem, error } = await supabase
       .from('action_items')
       .insert({
-        user_id: session.user.id,
+        user_id: user.id,
         audit_id: audit_id || null,
         title,
         description: description || '',
@@ -92,11 +86,11 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      logger.error('Error creating action item', { error, userId: session.user.id })
+      logger.error('Error creating action item', { error, userId: user.id })
       return NextResponse.json({ error: 'Failed to create action item' }, { status: 500 })
     }
 
-    logger.info('Action item created', { actionItemId: actionItem.id, userId: session.user.id })
+    logger.info('Action item created', { actionItemId: actionItem.id, userId: user.id })
     return NextResponse.json({ actionItem })
   } catch (error) {
     logger.error('Unexpected error in POST /api/action-items', { error })

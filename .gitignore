@@ -105,3 +105,7 @@ database/*.sql
 run-admin-migration.js
 supabase-migration.js
 supabase-sql-to-run.sql
+
+# Webpack cache
+.next/cache/
+.webpack-cache/

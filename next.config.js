@@ -1,4 +1,7 @@
-const { withSentryConfig } = require('@sentry/nextjs')
+import { withSentryConfig } from '@sentry/nextjs';
+import path from 'path';
+import webpack from 'webpack';
+import './src/lib/polyfills.js';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -43,7 +46,12 @@ const nextConfig = {
   // Performance optimizations
   compress: true,
   poweredByHeader: false,
-  productionBrowserSourceMaps: true,
+  productionBrowserSourceMaps: false, // Disabled to reduce bundle size
+  
+  // Build optimizations
+  experimental: {
+    optimizeCss: true,
+  },
   
   images: {
     domains: ['pwscfkrouagstuyakfjj.supabase.co'],
@@ -56,7 +64,61 @@ const nextConfig = {
     formats: ['image/webp', 'image/avif']
   },
   
-  webpack: (config, { isServer }) => {
+  // Transpile packages that might use browser globals
+  transpilePackages: [],
+  
+  webpack: (config, { isServer, dev }) => {
+    // Fix 'self is not defined' error for server-side rendering
+    if (isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'self': false,
+      };
+      
+      // Provide global polyfills for server
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          self: 'global',
+        })
+      );
+    }
+    
+    // Optimize webpack cache
+    if (!dev) {
+      config.cache = {
+        type: 'filesystem',
+        cacheDirectory: path.join(process.cwd(), '.next/cache/webpack'),
+        maxMemoryGenerations: 1,
+        maxAge: 1000 * 60 * 60 * 24, // 1 day
+      };
+    }
+    
+    // Reduce bundle size
+    config.optimization = {
+      ...config.optimization,
+      splitChunks: {
+        chunks: 'all',
+        cacheGroups: {
+          default: false,
+          vendors: false,
+          vendor: {
+            name: 'vendor',
+            chunks: 'all',
+            test: /[\\/]node_modules[\\/]/,
+            priority: 20,
+          },
+          common: {
+            name: 'common',
+            minChunks: 2,
+            chunks: 'all',
+            priority: 10,
+            reuseExistingChunk: true,
+            enforce: true,
+          },
+        },
+      },
+    };
+    
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -65,12 +127,17 @@ const nextConfig = {
         tls: false,
       };
     }
+    
+    // Optimize large imports
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'lodash': 'lodash-es',
+    };
+
     return config;
   },
 }
 
 // Sentry configuration removed
 
-module.exports = process.env.SENTRY_DSN 
-  ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
-  : nextConfig
+export default nextConfig

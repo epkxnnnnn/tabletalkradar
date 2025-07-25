@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/components/providers/AuthProvider'
 import { AgencyProvider } from '@/components/providers/AgencyProvider'
+import { ThemeProvider } from '@/components/ui/theme-provider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -17,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* Google Analytics */}
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-Z0QWRP0VP8"></script>
@@ -33,11 +34,13 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <AuthProvider>
-          <AgencyProvider>
-            {children}
-          </AgencyProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <AgencyProvider>
+              {children}
+            </AgencyProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
