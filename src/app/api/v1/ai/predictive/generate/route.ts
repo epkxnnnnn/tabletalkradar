@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get historical data for the client/agency
-    let historicalData = null
+    let historicalData: any = null
     if (client_id) {
       const { data } = await supabase
         .from('clients')
