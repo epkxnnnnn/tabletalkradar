@@ -49,8 +49,12 @@ export const GET = withApiHandler(
         .order('created_at', { ascending: false })
 
       if (clientsError) {
-        return Response.json(
-          { error: 'Failed to fetch clients', details: clientsError },
+        return NextResponse.json(
+          { 
+            success: false,
+            error: 'Failed to fetch clients', 
+            details: clientsError 
+          },
           { status: 500 }
         )
       }
@@ -92,7 +96,7 @@ export const GET = withApiHandler(
         ].filter(Boolean)
       }))
 
-      return Response.json({
+      return NextResponse.json({
         success: true,
         data: {
           summary: analysis,

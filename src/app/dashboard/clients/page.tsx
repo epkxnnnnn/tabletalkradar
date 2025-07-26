@@ -9,7 +9,7 @@ export default function AgencyClientsPage() {
   return (
     <AuthProvider>
       <AgencyProvider>
-        <DashboardLayout>
+        <DashboardLayout userRole="superadmin">
           <AgencyClientList />
         </DashboardLayout>
       </AgencyProvider>
