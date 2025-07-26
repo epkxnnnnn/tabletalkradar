@@ -22,7 +22,7 @@ interface RestaurantData {
   'Google Business ID': string
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const csvFilePath = '/Users/topwireless/Downloads/client/restaurant_full_info.csv'
     

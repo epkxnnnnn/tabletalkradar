@@ -6,7 +6,7 @@ import { ClientCard } from './ClientCard'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Plus, Search, Filter } from 'lucide-react'
+import { Plus, Search } from 'lucide-react'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
 

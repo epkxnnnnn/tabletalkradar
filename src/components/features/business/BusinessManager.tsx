@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '../../providers/AuthProvider'
 import { useAutoSave } from '@/hooks/useAutoSave'
-import { googleBusinessService, GoogleBusinessProfile, GoogleReview } from '@/lib/google-business'
+import { GoogleBusinessProfile, GoogleReview } from '@/lib/google-business'
 
 interface Business {
   id: string

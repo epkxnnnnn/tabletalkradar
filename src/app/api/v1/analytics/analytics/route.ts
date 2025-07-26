@@ -41,7 +41,7 @@ function getTimeframeStartDate(timeframe: string): string {
 }
 
 // Helper functions for calculations
-function calculateRevenue(clients: any[], audits: any[]): number {
+function calculateRevenue(clients: any[], _audits: any[]): number {
   const tierValues = { basic: 500, standard: 1200, premium: 2500, enterprise: 5000 }
   return clients.reduce((total, client) => {
     const tierValue = tierValues[client.client_tier as keyof typeof tierValues] || 1000
@@ -62,7 +62,7 @@ function calculateTeamEfficiency(team: any[], audits: any[]): number {
   return Math.min(100, auditsPerTeamMember * 10)
 }
 
-function calculateRetentionRate(clients: any[], audits: any[]): number {
+function calculateRetentionRate(clients: any[], _audits: any[]): number {
   const activeClients = clients.filter(c => c.status === 'active').length
   const totalClients = clients.length
   return totalClients > 0 ? (activeClients / totalClients) * 100 : 100
@@ -117,7 +117,7 @@ function calculateTeamProductivity(team: any[], audits: any[]): number {
   return Math.min(100, avgAuditsPerMember * 5)
 }
 
-function calculateTeamUtilization(team: any[]): number {
+function calculateTeamUtilization(_team: any[]): number {
   return 75 + Math.random() * 20
 }
 
@@ -154,7 +154,7 @@ function calculateMonthlyRecurring(clients: any[]): number {
   return calculateRevenue(clients, [])
 }
 
-function calculateCAC(clients: any[], audits: any[]): number {
+function calculateCAC(_clients: any[], _audits: any[]): number {
   return 800 + Math.random() * 400
 }
 

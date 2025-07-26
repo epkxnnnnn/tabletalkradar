@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ArrowRight, Globe, MapPin, Building2, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { ArrowRight, Globe, MapPin, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { getClientDashboardUrl } from '@/lib/utils/client-urls'
 
 interface ClientCardProps {
