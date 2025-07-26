@@ -50,11 +50,12 @@ export const POST = apiHandler(
       }
 
       // Generate unique slug
-      let baseSlug = generateClientSlug(data.business_name)
+      const baseSlug = generateClientSlug(data.business_name)
       let slug = baseSlug
       let counter = 1
 
       // Check for existing slugs and make unique
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         const { data: existing } = await supabase
           .from('clients')

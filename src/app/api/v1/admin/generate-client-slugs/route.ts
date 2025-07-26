@@ -38,7 +38,7 @@ export const POST = apiHandler(
 
       // Generate unique slugs for each client
       for (const client of clients || []) {
-        let baseSlug = generateClientSlug(client.business_name)
+        const baseSlug = generateClientSlug(client.business_name)
         let slug = baseSlug
         
         // Handle duplicates by appending numbers
