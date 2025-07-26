@@ -1,6 +1,3 @@
-// Load server polyfills FIRST
-import './server-polyfill.js';
-
 import { withSentryConfig } from '@sentry/nextjs';
 import path from 'path';
 import webpack from 'webpack';

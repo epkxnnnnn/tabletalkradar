@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "NODE_OPTIONS='--require ./server-polyfill.js' next build",
+    "build": "NODE_OPTIONS='--require ./server-polyfill.cjs' next build",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
