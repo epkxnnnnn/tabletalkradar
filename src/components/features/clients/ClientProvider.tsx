@@ -45,6 +45,7 @@ interface ClientContextType {
   canRespondReviews: boolean
   canViewAnalytics: boolean
   canManageSettings: boolean
+  isAgencySuperAdmin: boolean
   
   // Utility functions
   refreshClientData: () => Promise<void>
@@ -53,12 +54,13 @@ interface ClientContextType {
 
 const ClientContext = createContext<ClientContextType | undefined>(undefined)
 
-export function ClientProvider({ children }: { children: React.ReactNode }) {
+export function ClientProvider({ children, initialClient }: { children: React.ReactNode; initialClient?: any }) {
   const { user } = useAuth()
   const [currentClientUser, setCurrentClientUser] = useState<ClientUser | null>(null)
   const [currentClient, setCurrentClient] = useState<ClientInfo | null>(null)
   const [availableClients, setAvailableClients] = useState<ClientInfo[]>([])
   const [clientsLoading, setClientsLoading] = useState(true)
+  const [isAgencySuperAdmin, setIsAgencySuperAdmin] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -76,39 +78,106 @@ export function ClientProvider({ children }: { children: React.ReactNode }) {
 
     setClientsLoading(true)
     try {
-      // Get all clients this user has access to
-      const { data: clientUsers, error: clientUsersError } = await supabase
-        .from('client_users')
-        .select(`
-          *,
-          clients (
+      // First check if user is an agency superadmin
+      const { data: agencyMembership } = await supabase
+        .from('agency_memberships')
+        .select('agency_id, role')
+        .eq('user_id', user.id)
+        .in('role', ['owner', 'admin'])
+        .eq('status', 'active')
+        .single()
+
+      let clients = []
+
+      if (agencyMembership) {
+        // User is agency superadmin - get all agency clients
+        setIsAgencySuperAdmin(true)
+        
+        const { data: agencyClients, error: agencyError } = await supabase
+          .from('clients')
+          .select(`
             *,
             agencies (
               name
             )
-          )
-        `)
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
+          `)
+          .eq('agency_id', agencyMembership.agency_id)
+          .order('created_at', { ascending: false })
 
-      if (clientUsersError) throw clientUsersError
+        if (agencyError) throw agencyError
 
-      const clients = (clientUsers || []).map(cu => ({
-        id: cu.clients.id,
-        business_name: cu.clients.business_name,
-        industry: cu.clients.industry,
-        location: cu.clients.location,
-        website: cu.clients.website,
-        status: cu.clients.status,
-        agency_id: cu.clients?.[0]?.agency_id,
-        agency_name: cu.clients.agencies?.name || 'Unknown Agency'
-      }))
+        clients = (agencyClients || []).map(client => ({
+          id: client.id,
+          business_name: client.business_name,
+          industry: client.industry,
+          location: client.location,
+          website: client.website,
+          status: client.status,
+          agency_id: client.agency_id,
+          agency_name: client.agencies?.name || 'Unknown Agency'
+        }))
+      } else {
+        // Regular client user - get their assigned clients
+        const { data: clientUsers, error: clientUsersError } = await supabase
+          .from('client_users')
+          .select(`
+            *,
+            clients (
+              *,
+              agencies (
+                name
+              )
+            )
+          `)
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+
+        if (clientUsersError) throw clientUsersError
+
+        clients = (clientUsers || []).map(cu => ({
+          id: cu.clients.id,
+          business_name: cu.clients.business_name,
+          industry: cu.clients.industry,
+          location: cu.clients.location,
+          website: cu.clients.website,
+          status: cu.clients.status,
+          agency_id: cu.clients.agency_id,
+          agency_name: cu.clients.agencies?.name || 'Unknown Agency'
+        }))
+      }
 
       setAvailableClients(clients)
 
-      // Auto-select first client if none selected
-      if (clients.length > 0 && !currentClient) {
+      // If initialClient is provided, use it
+      if (initialClient) {
+        setCurrentClient({
+          id: initialClient.id,
+          business_name: initialClient.business_name,
+          industry: initialClient.industry,
+          location: initialClient.location,
+          website: initialClient.website,
+          status: initialClient.status,
+          agency_id: initialClient.agency_id,
+          agency_name: initialClient.agencies?.name || 'Unknown Agency'
+        })
+        
+        // For superadmins, create a virtual client user
+        if (isAgencySuperAdmin) {
+          setCurrentClientUser({
+            id: `superadmin-${user.id}`,
+            user_id: user.id,
+            client_id: initialClient.id,
+            agency_id: initialClient.agency_id,
+            role: 'owner',
+            permissions: {},
+            is_active: true,
+            dashboard_preferences: {},
+            created_at: new Date().toISOString()
+          })
+        }
+      } else if (clients.length > 0 && !currentClient) {
+        // Auto-select first client if none selected
         await switchClient(clients[0].id)
       }
     } catch (error) {
@@ -122,18 +191,7 @@ export function ClientProvider({ children }: { children: React.ReactNode }) {
     if (!user) return
 
     try {
-      // Get client user record
-      const { data: clientUser, error: clientUserError } = await supabase
-        .from('client_users')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('client_id', clientId)
-        .eq('is_active', true)
-        .single()
-
-      if (clientUserError) throw clientUserError
-
-      // Get client info
+      // Get client info first
       const { data: client, error: clientError } = await supabase
         .from('clients')
         .select(`
@@ -147,21 +205,63 @@ export function ClientProvider({ children }: { children: React.ReactNode }) {
 
       if (clientError) throw clientError
 
-      // Update last login
-      await supabase
-        .from('client_users')
-        .update({ last_login: new Date().toISOString() })
-        .eq('id', clientUser.id)
+      // Check if user is agency superadmin
+      const { data: agencyMembership } = await supabase
+        .from('agency_memberships')
+        .select('agency_id, role')
+        .eq('user_id', user.id)
+        .eq('agency_id', client.agency_id)
+        .in('role', ['owner', 'admin'])
+        .eq('status', 'active')
+        .single()
 
-      // Track session start
-      await supabase
-        .from('client_sessions')
-        .insert({
-          client_user_id: clientUser.id,
+      let clientUser = null
+
+      if (agencyMembership) {
+        // User is superadmin - create virtual client user
+        clientUser = {
+          id: `superadmin-${user.id}-${clientId}`,
+          user_id: user.id,
           client_id: clientId,
-          session_start: new Date().toISOString(),
-          features_used: []
-        })
+          agency_id: client.agency_id,
+          role: 'owner' as const,
+          permissions: {},
+          is_active: true,
+          dashboard_preferences: {},
+          created_at: new Date().toISOString()
+        }
+        setIsAgencySuperAdmin(true)
+      } else {
+        // Regular client user
+        const { data: realClientUser, error: clientUserError } = await supabase
+          .from('client_users')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('client_id', clientId)
+          .eq('is_active', true)
+          .single()
+
+        if (clientUserError) throw clientUserError
+        clientUser = realClientUser
+
+        // Update last login for real client users
+        await supabase
+          .from('client_users')
+          .update({ last_login: new Date().toISOString() })
+          .eq('id', clientUser.id)
+      }
+
+      // Track session start (only for real client users)
+      if (!agencyMembership && clientUser.id) {
+        await supabase
+          .from('client_sessions')
+          .insert({
+            client_user_id: clientUser.id,
+            client_id: clientId,
+            session_start: new Date().toISOString(),
+            features_used: []
+          })
+      }
 
       setCurrentClientUser(clientUser)
       setCurrentClient({
@@ -220,11 +320,11 @@ export function ClientProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Permission calculations based on role
-  const canCreatePosts = currentClientUser?.role === 'owner' || currentClientUser?.role === 'manager' || currentClientUser?.role === 'editor'
-  const canRespondReviews = currentClientUser?.role === 'owner' || currentClientUser?.role === 'manager' || currentClientUser?.role === 'editor'
-  const canViewAnalytics = currentClientUser?.role === 'owner' || currentClientUser?.role === 'manager'
-  const canManageSettings = currentClientUser?.role === 'owner'
+  // Permission calculations based on role (superadmins have all permissions)
+  const canCreatePosts = isAgencySuperAdmin || currentClientUser?.role === 'owner' || currentClientUser?.role === 'manager' || currentClientUser?.role === 'editor'
+  const canRespondReviews = isAgencySuperAdmin || currentClientUser?.role === 'owner' || currentClientUser?.role === 'manager' || currentClientUser?.role === 'editor'
+  const canViewAnalytics = isAgencySuperAdmin || currentClientUser?.role === 'owner' || currentClientUser?.role === 'manager'
+  const canManageSettings = isAgencySuperAdmin || currentClientUser?.role === 'owner'
 
   const value: ClientContextType = {
     currentClientUser,
@@ -236,6 +336,7 @@ export function ClientProvider({ children }: { children: React.ReactNode }) {
     canRespondReviews,
     canViewAnalytics,
     canManageSettings,
+    isAgencySuperAdmin,
     refreshClientData,
     trackFeatureUsage
   }

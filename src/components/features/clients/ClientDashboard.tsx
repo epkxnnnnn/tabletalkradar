@@ -13,6 +13,7 @@ import ClientQuickActions from './ClientQuickActions'
 import ClientOverviewStats from './ClientOverviewStats'
 import ClientRecentPosts from './ClientRecentPosts'
 import GoogleBusinessIntegration from '../business/GoogleBusinessIntegration'
+import { ClientProfileView } from './ClientProfileView'
 
 interface DashboardWidget {
   id: string
@@ -183,9 +184,10 @@ export default function ClientDashboard() {
           <div className="flex space-x-8 overflow-x-auto">
             {[
               { id: 'dashboard', name: 'Dashboard', icon: '📊', show: true },
+              { id: 'profile', name: 'Profile', icon: '🏢', show: true },
               { id: 'social', name: 'Social Media', icon: '📱', show: canCreatePosts },
               { id: 'reviews', name: 'Reviews', icon: '💬', show: canRespondReviews },
-              { id: 'google', name: 'Google Business', icon: '🏢', show: true },
+              { id: 'google', name: 'Google Business', icon: '🔗', show: true },
               { id: 'analytics', name: 'Analytics', icon: '📈', show: canViewAnalytics },
               { id: 'settings', name: 'Settings', icon: '⚙️', show: canManageSettings }
             ].filter(tab => tab.show).map(tab => (
@@ -274,6 +276,15 @@ export default function ClientDashboard() {
                 config={{ limit: 50, show_rating: true, show_platform: true }} 
               />
             </div>
+          </div>
+        )}
+
+        {activeTab === 'profile' && (
+          <div className="bg-slate-800 rounded-lg p-6">
+            <ClientProfileView 
+              clientId={currentClient?.id || ''} 
+              isEditable={canManageSettings}
+            />
           </div>
         )}
 

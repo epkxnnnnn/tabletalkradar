@@ -21,8 +21,9 @@ const GetClientsSchema = z.object({
 })
 
 const CreateClientSchema = z.object({
-  email: z.string().email(),
-  name: z.string().min(1)
+  business_name: z.string().min(1),
+  contact_email: z.string().email().optional(),
+  phone: z.string().optional()
 })
 
 // Authentication helper
@@ -82,32 +83,35 @@ export const POST = withMethods(['POST'])(
       throw new AuthorizationError('Only superadmin can create clients')
     }
     
-    const { email, name } = data
+    const { business_name, contact_email, phone } = data
     
-    // Create user in Supabase Auth
-    const { data: user, error: userError } = await supabaseAdmin().auth.admin.createUser({
-      email,
-      email_confirm: true,
-      user_metadata: { name, role: 'client' }
-    })
-    
-    if (userError) {
-      throw new Error(`Failed to create user: ${userError.message}`)
-    }
+    // Get user's agency if they have one
+    const { data: membership } = await supabaseAdmin()
+      .from('agency_memberships')
+      .select('agency_id')
+      .eq('user_id', (profile as any).id)
+      .single()
     
     // Insert into clients table
-    const { error: insertError } = await supabaseAdmin().from('clients').insert({
-      id: user.user?.id,
-      email,
-      name
-    })
+    const { data: newClient, error: insertError } = await supabaseAdmin()
+      .from('clients')
+      .insert({
+        owner_id: (profile as any).id,
+        agency_id: membership?.agency_id,
+        business_name,
+        contact_email,
+        phone,
+        status: 'active',
+        is_agency: false
+      })
+      .select()
+      .single()
     
     if (insertError) {
       throw new Error(`Failed to create client: ${insertError.message}`)
     }
     
-    const client = { id: user.user?.id, email, name }
-    return createdResponse(client, 'Client created successfully')
+    return createdResponse(newClient, 'Client created successfully')
     }
   )
 )

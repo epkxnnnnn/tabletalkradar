@@ -34,15 +34,21 @@ export type Agency = z.infer<typeof AgencySchema>
 // Client Types
 export const ClientSchema = z.object({
   id: z.string(),
-  name: z.string(),
-  email: z.string().email().optional(),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-  agency_id: z.string(),
   owner_id: z.string(),
+  agency_id: z.string().nullable(),
+  business_name: z.string(),
+  phone: z.string().optional(),
+  website: z.string().optional(),
+  category: z.string().optional(),
+  industry: z.string().optional(),
+  business_type: z.string().optional(),
+  google_account_id: z.string().optional(),
+  status: z.string().default('active'),
+  is_agency: z.boolean().default(false),
+  slug: z.string().optional(),
+  client_tier: z.string().optional(),
   created_at: z.string(),
-  updated_at: z.string(),
-  metadata: z.record(z.unknown()).optional()
+  updated_at: z.string()
 })
 export type Client = z.infer<typeof ClientSchema>
 

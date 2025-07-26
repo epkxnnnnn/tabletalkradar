@@ -146,7 +146,9 @@
       "Bash(if [ -z \"$SUPABASE_DB_PASSWORD\" ])",
       "Bash(then echo \"SUPABASE_DB_PASSWORD is not set\")",
       "Bash(else echo \"SUPABASE_DB_PASSWORD is set\")",
-      "Bash(fi)"
+      "Bash(fi)",
+      "Bash(open:*)",
+      "Bash(npm run migrate:dev:*)"
     ],
     "deny": []
   }
