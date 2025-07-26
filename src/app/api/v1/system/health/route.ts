@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { monitoring } from '@/lib/monitoring'
 import { logger } from '@/lib/logger'
 import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function GET(_request: NextRequest) {
   const startTime = Date.now()
@@ -10,12 +11,13 @@ export async function GET(_request: NextRequest) {
     // Perform health checks
     const healthStatus = await monitoring.healthCheck()
     
-    // Additional database health check
+    // Additional database health check - use a simple query that doesn't depend on RLS
     let databaseStatus: { status: 'pass' | 'fail'; message?: string } = { status: 'pass' }
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('count')
+      // Use restaurants table which has actual data with admin client
+      const { data, error } = await supabaseAdmin()
+        .from('restaurants')
+        .select('id')
         .limit(1)
       
       if (error) {

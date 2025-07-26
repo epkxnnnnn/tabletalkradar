@@ -150,7 +150,8 @@
       "Bash(open:*)",
       "Bash(npm run migrate:dev:*)",
       "Bash(npm ls:*)",
-      "Bash(NODE_ENV=production npm run build)"
+      "Bash(NODE_ENV=production npm run build)",
+      "Bash(timeout 10s npm run dev:*)"
     ],
     "deny": []
   }
