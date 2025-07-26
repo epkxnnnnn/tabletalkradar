@@ -203,10 +203,10 @@ async function performFullAudit(locationId: string, location: any, auditData: an
     .eq('is_tracking', true)
 
   const total_keywords_tracked = keywordStats?.length || 0
-  const keywords_ranking_top_3 = keywordStats?.filter(k => k.current_rank && Number(k.current_rank) <= 3).length || 0
-  const keywords_ranking_top_10 = keywordStats?.filter(k => k.current_rank && Number(k.current_rank) <= 10).length || 0
+  const keywords_ranking_top_3 = keywordStats?.filter((k: any) => k.current_rank && Number(k.current_rank) <= 3).length || 0
+  const keywords_ranking_top_10 = keywordStats?.filter((k: any) => k.current_rank && Number(k.current_rank) <= 10).length || 0
   const average_keyword_rank = keywordStats && keywordStats.length > 0
-    ? keywordStats.reduce((sum, k) => sum + (Number(k.current_rank) || 0), 0) / keywordStats.length
+    ? keywordStats.reduce((sum: number, k: any) => sum + (Number(k.current_rank) || 0), 0) / keywordStats.length
     : 0
 
   // Create audit record

@@ -276,7 +276,7 @@ export const GET = withMethods(['GET'])(
         avgClientRetention: calculateRetentionRate(clients, audits)
       },
       clientMetrics: {
-        activeClients: clients.filter(c => c.status === 'active').length,
+        activeClients: clients.filter((c: any) => c.status === 'active').length,
         churnRate: calculateChurnRate(clients, timeframe),
         avgLifetimeValue: calculateLifetimeValue(clients),
         topPerformers: getTopPerformingClients(clients, audits)

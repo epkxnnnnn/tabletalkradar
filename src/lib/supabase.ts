@@ -11,13 +11,22 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase URL or Anon Key in environment variables.');
 }
 
+// Singleton pattern to prevent multiple instances
+let supabaseInstance: ReturnType<typeof createClient> | null = null;
+
 // Initialize Supabase client with SSR-safe configuration
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: typeof window !== 'undefined',
-    persistSession: typeof window !== 'undefined',
-  },
-});
+export const supabase = (() => {
+  if (!supabaseInstance) {
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: typeof window !== 'undefined',
+        persistSession: typeof window !== 'undefined',
+        detectSessionInUrl: typeof window !== 'undefined',
+      },
+    });
+  }
+  return supabaseInstance;
+})();
 
 // Fetch profile from 'profiles' table
 export async function fetchProfile(userId: string) {

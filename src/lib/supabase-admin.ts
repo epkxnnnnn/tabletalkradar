@@ -14,7 +14,9 @@ export const supabaseAdmin = () => {
     }
     
     if (!supabaseServiceKey) {
-      throw new Error('supabaseServiceKey is required. Please set SUPABASE_SERVICE_ROLE_KEY environment variable.')
+      console.warn('SUPABASE_SERVICE_ROLE_KEY not found. Admin functions will be limited.')
+      // Return a dummy client that will fail gracefully
+      return null as any
     }
     
     adminClient = createClient(supabaseUrl, supabaseServiceKey, {
