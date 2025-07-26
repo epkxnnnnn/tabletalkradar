@@ -149,7 +149,8 @@
       "Bash(fi)",
       "Bash(open:*)",
       "Bash(npm run migrate:dev:*)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(NODE_ENV=production npm run build)"
     ],
     "deny": []
   }
