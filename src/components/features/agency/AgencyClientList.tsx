@@ -79,7 +79,7 @@ export function AgencyClientList() {
 
       if (error) throw error
 
-      const clientsWithMetrics = (agencyClients || []).map(client => {
+      const clientsWithMetrics = (agencyClients || []).map((client: any) => {
         // Get last audit date
         const lastAudit = client.audits?.[0]
         
@@ -163,7 +163,7 @@ export function AgencyClientList() {
           <Input
             placeholder="Search clients..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
             className="pl-10"
           />
         </div>

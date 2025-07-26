@@ -1,12 +1,18 @@
 import { NextRequest } from 'next/server'
-import { apiHandler, withAuth } from '@/lib/api-handler'
+import { withApiHandler, withAuth } from '@/lib/api-handler'
 import { createServerClient } from '@/lib/supabase/server'
 import { generateClientSlug } from '@/lib/utils/client-urls'
+import type { Client } from '@/types'
 
-export const POST = apiHandler(
+interface AuthUser {
+  id: string
+  email: string
+}
+
+export const POST = withApiHandler(
   async (req: NextRequest) => {
-    return withAuth(req, async (user) => {
-      const supabase = createServerClient()
+    return withAuth(req, async (user: AuthUser) => {
+      const supabase = await createServerClient()
 
       // Verify user is agency superadmin
       const { data: membership } = await supabase

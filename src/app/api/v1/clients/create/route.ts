@@ -1,8 +1,13 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
-import { apiHandler, withAuth } from '@/lib/api-handler'
+import { withApiHandler, withAuth } from '@/lib/api-handler'
 import { createServerClient } from '@/lib/supabase/server'
 import { generateClientSlug } from '@/lib/utils/client-urls'
+
+interface AuthUser {
+  id: string
+  email: string
+}
 
 // Validation schema matching database structure
 const CreateClientSchema = z.object({
@@ -16,10 +21,10 @@ const CreateClientSchema = z.object({
   client_tier: z.enum(['basic', 'standard', 'premium', 'enterprise']).optional(),
 })
 
-export const POST = apiHandler(
+export const POST = withApiHandler(
   async (req: NextRequest) => {
-    return withAuth(req, async (user) => {
-      const supabase = createServerClient()
+    return withAuth(req, async (user: AuthUser) => {
+      const supabase = await createServerClient()
       const body = await req.json()
       
       // Validate input

@@ -97,10 +97,10 @@ export function ClientProfileView({ clientId, isEditable = false }: ClientProfil
       // Compute metrics
       const totalKeywords = seoKeywords?.length || 0
       const averageRanking = seoKeywords?.length 
-        ? seoKeywords.reduce((acc, kw) => acc + (kw.current_rank || 100), 0) / seoKeywords.length
+        ? seoKeywords.reduce((acc: number, kw: any) => acc + (kw.current_rank || 100), 0) / seoKeywords.length
         : 0
       const totalServices = services?.length || 0
-      const socialEngagement = socialPosts?.reduce((acc, post) => 
+      const socialEngagement = socialPosts?.reduce((acc: number, post: any) => 
         acc + (post.likes_count || 0) + (post.comments_count || 0) + (post.shares_count || 0), 0) || 0
       const primaryLocation = locations?.[0]
       const googleRating = primaryLocation?.google_rating || 0

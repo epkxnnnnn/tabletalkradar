@@ -57,7 +57,9 @@ async function cleanupAndSetupClients() {
 
     const userId = userData.id
     const agencyId = userData.agency_memberships[0]?.agency_id
-    const agencyName = userData.agency_memberships[0]?.agencies?.name
+    const agencyName = Array.isArray(userData.agency_memberships[0]?.agencies) 
+      ? userData.agency_memberships[0]?.agencies[0]?.name 
+      : userData.agency_memberships[0]?.agencies?.name
 
     console.log(`✅ User ID: ${userId}`)
     console.log(`✅ Agency: ${agencyName} (${agencyId})\n`)
