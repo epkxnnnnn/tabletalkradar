@@ -1,4 +1,5 @@
 // TableTalk Radar - Shared Type Definitions
+import * as React from 'react'
 import { z } from 'zod'
 
 // Base Types

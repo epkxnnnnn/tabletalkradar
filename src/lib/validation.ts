@@ -10,7 +10,7 @@ export const validateEmail = (email: string): boolean => {
 
 // Phone validation utility
 export const validatePhone = (phone: string): boolean => {
-  const phoneSchema = z.string().regex(/^\+?[\d\s\-\(\)]+$/)
+  const phoneSchema = z.string().regex(/^\+?[\d\s\-()]+$/)
   return phoneSchema.safeParse(phone).success
 }
 

@@ -132,7 +132,7 @@ class GoogleBusinessService {
     return this.accessTokens.get(clientId) || null
   }
 
-  private async makeRequest(clientId: string, url: string, options: RequestInit = {}) {
+  private async makeRequest(clientId: string, url: string, options: Parameters<typeof fetch>[1] = {}) {
     const accessToken = this.getAccessToken(clientId)
     if (!accessToken) {
       throw new Error(`Google Business access token not set for client ${clientId}`)

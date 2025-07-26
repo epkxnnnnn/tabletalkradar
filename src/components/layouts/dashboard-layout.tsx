@@ -1,7 +1,8 @@
 'use client'
 
+import * as React from 'react'
 import { useState } from 'react'
-import { ChevronDown, Menu, X, Home, BarChart3, Settings, Users, MapPin, MessageSquare, Calendar, Bell } from 'lucide-react'
+import { Menu, X, Home, BarChart3, Settings, Users, MapPin, MessageSquare, Calendar, Bell } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 

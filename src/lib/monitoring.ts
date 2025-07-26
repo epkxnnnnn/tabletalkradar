@@ -179,7 +179,7 @@ class MonitoringSystem {
     )
 
     switch (alert.id) {
-      case 'high_error_rate':
+      case 'high_error_rate': {
         const errorMetrics = recentMetrics.filter(m => m.name === 'error.count')
         const totalRequests = recentMetrics.filter(m => m.name === 'request.count')
         const errorRate = errorMetrics.length > 0 && totalRequests.length > 0
@@ -187,24 +187,28 @@ class MonitoringSystem {
              totalRequests.reduce((sum, m) => sum + m.value, 0)) * 100
           : 0
         return errorRate > alert.threshold
+      }
 
-      case 'slow_response_time':
+      case 'slow_response_time': {
         const responseTimeMetrics = recentMetrics.filter(m => m.name === 'response.time')
         const avgResponseTime = responseTimeMetrics.length > 0
           ? responseTimeMetrics.reduce((sum, m) => sum + m.value, 0) / responseTimeMetrics.length
           : 0
         return avgResponseTime > alert.threshold
+      }
 
-      case 'high_memory_usage':
+      case 'high_memory_usage': {
         const memoryMetrics = recentMetrics.filter(m => m.name === 'system.memory.usage')
         const latestMemoryUsage = memoryMetrics.length > 0
           ? memoryMetrics[memoryMetrics.length - 1].value
           : 0
         return latestMemoryUsage > alert.threshold
+      }
 
-      case 'database_connection_failure':
+      case 'database_connection_failure': {
         const dbErrorMetrics = recentMetrics.filter(m => m.name === 'database.connection.error')
         return dbErrorMetrics.length > 0
+      }
 
       default:
         return false

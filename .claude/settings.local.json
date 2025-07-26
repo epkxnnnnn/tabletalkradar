@@ -148,7 +148,8 @@
       "Bash(else echo \"SUPABASE_DB_PASSWORD is set\")",
       "Bash(fi)",
       "Bash(open:*)",
-      "Bash(npm run migrate:dev:*)"
+      "Bash(npm run migrate:dev:*)",
+      "Bash(npm ls:*)"
     ],
     "deny": []
   }

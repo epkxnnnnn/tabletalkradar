@@ -269,7 +269,7 @@ export function ClientProfileView({ clientId, isEditable = false }: ClientProfil
           <TabsTrigger value="seo">SEO</TabsTrigger>
           <TabsTrigger value="social">Social</TabsTrigger>
           <TabsTrigger value="menu">Menu</TabsTrigger>
-        </Tabs>
+        </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

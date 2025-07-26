@@ -23,7 +23,7 @@ export function isClientDashboard(pathname: string): boolean {
  * Extract client slug from pathname
  */
 export function extractClientSlug(pathname: string): string | null {
-  const match = pathname.match(/^\/clients\/([^\/]+)/)
+  const match = pathname.match(/^\/clients\/([^/]+)/)
   return match ? match[1] : null
 }
 

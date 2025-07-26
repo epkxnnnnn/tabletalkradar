@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 
-export interface Toast {
+export interface ToastData {
   id: string
   type: 'success' | 'error' | 'warning' | 'info'
   title: string
@@ -11,7 +11,7 @@ export interface Toast {
 }
 
 interface ToastProps {
-  toast: Toast
+  toast: ToastData
   onRemove: (id: string) => void
 }
 
@@ -76,7 +76,7 @@ export default function Toast({ toast, onRemove }: ToastProps) {
   )
 }
 
-export function ToastContainer({ toasts, onRemove }: { toasts: Toast[], onRemove: (id: string) => void }) {
+export function ToastContainer({ toasts, onRemove }: { toasts: ToastData[], onRemove: (id: string) => void }) {
   return (
     <div className="fixed top-4 right-4 z-50 space-y-2">
       {toasts.map((toast) => (
@@ -87,9 +87,9 @@ export function ToastContainer({ toasts, onRemove }: { toasts: Toast[], onRemove
 }
 
 export function useToast() {
-  const [toasts, setToasts] = useState<Toast[]>([])
+  const [toasts, setToasts] = useState<ToastData[]>([])
 
-  const addToast = (toast: Omit<Toast, 'id'>) => {
+  const addToast = (toast: Omit<ToastData, 'id'>) => {
     const id = Math.random().toString(36).substr(2, 9)
     setToasts(prev => [...prev, { ...toast, id }])
   }
